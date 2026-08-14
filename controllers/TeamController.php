@@ -164,18 +164,21 @@ class TeamController extends Controller
         }
 
         $existing = TeamMembership::find()->where(['team_id' => $teamId, 'user_id' => $userId])->one();
-        if ($existing !== null) {
-            Yii::$app->session->setFlash('error', 'This user already has a membership record with this team.');
+        if ($existing !== null && !in_array($existing->invite_status, [TeamMembership::INVITE_LEFT, TeamMembership::INVITE_DECLINED])) {
+            Yii::$app->session->setFlash('error', 'This user already has a pending or active membership with this team.');
             return $this->redirect(['manage', 'id' => $teamId]);
         }
 
-        $membership = new TeamMembership([
+        $membership = $existing ?? new TeamMembership([
             'team_id' => $teamId,
             'user_id' => $userId,
-            'invite_status' => TeamMembership::INVITE_INVITED,
-            'invited_at' => time(),
         ]);
-        $membership->save();
+
+        $membership->invite_status = TeamMembership::INVITE_INVITED;
+        $membership->invited_at = time();
+        $membership->responded_at = null;
+        $membership->conflict_status = null;
+        $membership->save(false);
 
         Yii::$app->session->setFlash('success', 'Invite sent.');
         return $this->redirect(['manage', 'id' => $teamId]);
@@ -198,14 +201,21 @@ class TeamController extends Controller
             return $this->redirect($this->backTarget($competitionId, $id));
         }
 
-        $membership = new TeamMembership([
+        // Reuse the existing row if this person was declined or left before —
+        // the unique (team_id, user_id) index means there can only ever be
+        // ONE membership row per person per team, so re-requesting has to
+        // reset that same row rather than insert a second one.
+        $membership = $existing ?? new TeamMembership([
             'team_id' => $id,
             'user_id' => $userId,
-            'invite_status' => TeamMembership::INVITE_INVITED,
-            'invited_at' => time(),
-            'note' => trim($note) !== '' ? trim($note) : null,
         ]);
-        $membership->save();
+
+        $membership->invite_status = TeamMembership::INVITE_INVITED;
+        $membership->invited_at = time();
+        $membership->responded_at = null;
+        $membership->conflict_status = null;
+        $membership->note = trim($note) !== '' ? trim($note) : null;
+        $membership->save(false);
 
         Yii::$app->session->setFlash('success', "Request sent to join \"{$team->name}\" — waiting on the team owner.");
         return $this->redirect($this->backTarget($competitionId, $id));

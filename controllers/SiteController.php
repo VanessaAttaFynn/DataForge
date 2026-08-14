@@ -33,22 +33,26 @@ class SiteController extends Controller
     /**
      * {@inheritdoc}
      */
-    public function behaviors(): array
+    public function behaviors()
     {
         return [
             'access' => [
-                'class' => AccessControl::class,
-                'only' => ['logout'],
+                'class' => \yii\filters\AccessControl::class,
                 'rules' => [
                     [
-                        'actions' => ['logout'],
                         'allow' => true,
-                        'roles' => ['@'],
+                        'actions' => ['login', 'signup', 'verify-email'],
+                        'roles' => ['?', '@'], // reachable whether guest or logged in
+                    ],
+                    [
+                        'allow' => true,
+                        'actions' => ['logout', 'dashboard', 'index'],
+                        'roles' => ['@'], // logged-in only — this is what was missing
                     ],
                 ],
             ],
             'verbs' => [
-                'class' => VerbFilter::class,
+                'class' => \yii\filters\VerbFilter::class,
                 'actions' => [
                     'logout' => ['post'],
                 ],
@@ -78,9 +82,11 @@ class SiteController extends Controller
      *
      * @return string
      */
-    public function actionIndex(): string
+    public function actionIndex()
     {
-        return $this->render('index');
+        return Yii::$app->user->isGuest
+            ? $this->redirect(['site/login'])
+            : $this->redirect(['site/dashboard']);
     }
 
 
