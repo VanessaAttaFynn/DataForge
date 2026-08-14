@@ -18,6 +18,12 @@ $this->title = $post->title . ' — Leaderboard';
 </div>
 
 <div class="panel">
+    <?php if (!empty($rows)): ?>
+        <div style="display: flex; justify-content: space-between; padding: 6px 16px 10px;">
+            <span style="font-size: 11px; font-weight: 700; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.05em;">Name</span>
+            <span style="font-size: 11px; font-weight: 700; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.05em;">Metric: <?= $competition->metric === 'accuracy' ? 'Accuracy (%)' : 'RMSE' ?></span>
+        </div>
+    <?php endif; ?>
     <?php if (empty($rows)): ?>
         <p style="color: var(--text-dim); font-size: 13.5px;">No submissions yet.</p>
     <?php endif; ?>

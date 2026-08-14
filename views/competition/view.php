@@ -20,7 +20,7 @@ $hasDatasetAccess = $hasAnyRegistration || $canManage;
     <div>
         <div class="eyebrow"><?= ucfirst($post->type) ?><?= $post->status !== 'published' ? ' · ' . ucfirst($post->status) : '' ?></div>
         <h1 class="page-title"><?= Html::encode($post->title) ?></h1>
-        <div class="page-sub">by <?= Html::encode($post->author->username ?? 'Unknown') ?> · deadline <?= Html::encode($competition->deadline) ?></div>
+        <div class="page-sub">deadline <?= date('Y-m-d H:i', strtotime($competition->deadline)) ?></div>
     </div>
     <?php if ($canManage): ?>
         <div style="display: flex; gap: 10px;">
@@ -32,6 +32,30 @@ $hasDatasetAccess = $hasAnyRegistration || $canManage;
         </div>
     <?php endif; ?>
 </div>
+
+<?php if ($post->status === 'published' && ($hasAnyRegistration || $canManage || (!$hasAnyRegistration && $competition->accepts !== 'individual'))): ?>
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+    <div style="display: flex; gap: 10px;">
+        <?php if ($hasAnyRegistration): ?>
+            <button type="button" class="nav-item active" style="display: inline-flex; padding: 9px 20px; border: 1px solid var(--border-strong); cursor: pointer;"
+                    onclick="document.getElementById('submit-modal').classList.add('open')">
+                Submit Prediction
+            </button>
+            <?= Html::a('My Submissions', ['my-submissions', 'id' => $post->id], ['class' => 'nav-item', 'style' => 'display:inline-flex; padding: 9px 16px;']) ?>
+        <?php endif; ?>
+        <?php if ($canManage): ?>
+            <?= Html::a('All Submissions', ['submissions', 'id' => $post->id], ['class' => 'nav-item', 'style' => 'display:inline-flex; padding: 9px 16px;']) ?>
+        <?php endif; ?>
+    </div>
+
+    <?php if (!$hasAnyRegistration && $competition->accepts !== 'individual'): ?>
+        <div style="display: flex; gap: 10px;">
+            <?= Html::a('+ Create a Team', ['/team/create'], ['class' => 'nav-item', 'style' => 'display: inline-flex; padding: 9px 20px;']) ?>
+            <?= Html::a('Browse Teams', ['teams', 'id' => $post->id], ['class' => 'nav-item', 'style' => 'display: inline-flex; padding: 9px 20px;']) ?>
+        </div>
+    <?php endif; ?>
+</div>
+<?php endif; ?>
 
 <?php if (Yii::$app->session->hasFlash('success')): ?>
     <div class="panel" style="border-color: var(--emerald); margin-bottom: 20px;"><?= Html::encode(Yii::$app->session->getFlash('success')) ?></div>
@@ -58,9 +82,7 @@ $hasDatasetAccess = $hasAnyRegistration || $canManage;
             <span class="comp-tag" style="background: linear-gradient(90deg, rgba(212,175,106,0.22), rgba(212,175,106,0.06)); border: 1px solid var(--border-strong); color: var(--gold-bright); font-weight: 700;">✓ Registered — Team <?= Html::encode($myRegisteredTeam->name) ?></span>
             <?= Html::a('Manage Team', ['/team/manage', 'id' => $myRegisteredTeam->id], ['class' => 'nav-item', 'style' => 'display: inline-flex; padding: 9px 20px;']) ?>
         <?php elseif (!$hasAnyRegistration): ?>
-            <?= Html::a('+ Create a Team', ['/team/create'], ['class' => 'nav-item', 'style' => 'display: inline-flex; padding: 9px 20px;']) ?>
             <?= Html::a('Register a Team', ['register-team', 'id' => $post->id], ['class' => 'nav-item active', 'style' => 'display: inline-flex; padding: 9px 20px;']) ?>
-            <?= Html::a('Browse Teams', ['teams', 'id' => $post->id], ['class' => 'nav-item', 'style' => 'display: inline-flex; padding: 9px 20px;']) ?>
         <?php endif; ?>
     <?php endif; ?>
 </div>
@@ -75,6 +97,13 @@ $hasDatasetAccess = $hasAnyRegistration || $canManage;
 
         <div class="panel">
             <div class="panel-head"><div class="panel-title">Leaderboard</div></div>
+            <?php if (!empty($leaderboardTop)): ?>
+                <?php $metricLabel = $competition->metric === 'accuracy' ? 'Accuracy (%)' : 'RMSE'; ?>
+                <div style="display: flex; justify-content: space-between; padding: 4px 14px 8px;">
+                    <span style="font-size: 10.5px; font-weight: 700; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.05em;">Name</span>
+                    <span style="font-size: 10.5px; font-weight: 700; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.05em;">Metric: <?= $metricLabel ?></span>
+                </div>
+            <?php endif; ?>
             <?php if (empty($leaderboardTop)): ?>
                 <p style="color: var(--text-faint); font-size: 12.5px;">No submissions yet.</p>
             <?php else: ?>
@@ -87,18 +116,6 @@ $hasDatasetAccess = $hasAnyRegistration || $canManage;
                 <?= Html::a('View Full Leaderboard →', ['leaderboard', 'id' => $post->id], ['style' => 'display: block; margin-top: 12px; font-size: 12.5px; color: var(--gold);']) ?>
             <?php endif; ?>
         </div>
-
-        <?php if ($hasAnyRegistration && $post->status === 'published'): ?>
-        <div class="panel" style="display: flex; align-items: center; justify-content: space-between;">
-            <div>
-                <div class="panel-title" style="margin-bottom: 4px;">Ready to submit?</div>
-                <div style="font-size: 12px; color: var(--text-faint);"><?= $submissionsRemainingToday ?> submission(s) remaining today.</div>
-            </div>
-            <button type="button" class="nav-item active" style="padding: 9px 22px; border: 1px solid var(--border-strong); cursor: pointer;" onclick="document.getElementById('submit-modal').classList.add('open')">
-                Submit Prediction
-            </button>
-        </div>
-        <?php endif; ?>
     </div>
 
     <div>

@@ -24,7 +24,7 @@ class CompetitionController extends Controller
                 'class' => AccessControl::class,
                 'rules' => [
                     ['allow' => true, 'actions' => ['index', 'view', 'teams', 'leaderboard'], 'roles' => ['?', '@']],
-                    ['allow' => true, 'actions' => ['create', 'update', 'delete', 'mine', 'dataset', 'register-team', 'submit'], 'roles' => ['@']],
+                    ['allow' => true, 'actions' => ['create', 'update', 'delete', 'mine', 'dataset', 'register-team', 'submit', 'submissions', 'my-submissions'], 'roles' => ['@']],
                 ],
             ],
         ];
@@ -514,10 +514,10 @@ class CompetitionController extends Controller
         if (strtolower($ext) === 'csv') {
             $handle = @fopen($fullPath, 'r');
             if ($handle) {
-                $header = fgetcsv($handle);
+                $header = fgetcsv($handle, 0, ',', '"', '\\');
                 $summary['columns'] = $header ? count($header) : null;
                 $rowCount = 0;
-                while (fgetcsv($handle) !== false) {
+                while (fgetcsv($handle, 0, ',', '"', '\\') !== false) {
                     $rowCount++;
                 }
                 fclose($handle);
@@ -598,7 +598,9 @@ class CompetitionController extends Controller
             );
         } catch (\Throwable $e) {
             Yii::error($e->getMessage(), __METHOD__);
-            Yii::$app->session->setFlash('error', 'Could not score this submission — check your CSV format (expects id, target columns).');
+            // TODO: swap back to a generic message once this is stable —
+            // showing the raw exception is just for testing right now.
+            Yii::$app->session->setFlash('error', 'Could not score this submission: ' . $e->getMessage());
             return $this->redirect(['view', 'id' => $id]);
         }
 
@@ -622,6 +624,46 @@ class CompetitionController extends Controller
     }
 
     /** Full ranked leaderboard — best score per participant. */
+    /** The current user's own submission history for this competition (individual or via their registered team). */
+    public function actionMySubmissions(int $id)
+    {
+        $post = $this->findPost($id);
+        $userId = Yii::$app->user->id;
+
+        $myTeamIds = \app\models\TeamMembership::find()
+            ->select('team_id')->where(['user_id' => $userId, 'invite_status' => 'consented'])->column();
+        $myRegisteredTeamIds = empty($myTeamIds) ? [] : \app\models\TeamCompetitionRegistration::find()
+            ->select('team_id')->where(['competition_id' => $id])->andWhere(['in', 'team_id', $myTeamIds])->column();
+
+        $submissions = \app\models\Submission::find()
+            ->where(['competition_id' => $id])
+            ->andWhere(['or',
+                ['user_id' => $userId, 'participant_type' => 'individual'],
+                empty($myRegisteredTeamIds) ? ['0=1'] : ['team_id' => $myRegisteredTeamIds],
+            ])
+            ->orderBy(['submitted_at' => SORT_DESC])
+            ->all();
+
+        return $this->render('my-submissions', ['post' => $post, 'competition' => $post->competition, 'submissions' => $submissions]);
+    }
+
+    /** Every submission attempt for this competition (not deduped to best-per-participant) — owner/moderator only. */
+    public function actionSubmissions(int $id)
+    {
+        $post = $this->findPost($id);
+
+        if ((int) Yii::$app->user->id !== (int) $post->author_id && !Yii::$app->user->can('moderateContent')) {
+            throw new ForbiddenHttpException('Only the competition owner can view all submissions.');
+        }
+
+        $submissions = \app\models\Submission::find()
+            ->where(['competition_id' => $id])
+            ->orderBy(['submitted_at' => SORT_DESC])
+            ->all();
+
+        return $this->render('submissions', ['post' => $post, 'competition' => $post->competition, 'submissions' => $submissions]);
+    }
+
     public function actionLeaderboard(int $id)
     {
         $post = $this->findPost($id);

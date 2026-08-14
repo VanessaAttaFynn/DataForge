@@ -14,8 +14,7 @@ $isUpdate = $isUpdate ?? false;
 $labelStyle = "font-size: 12.5px; font-weight: 600; color: var(--text-dim); display: block; margin-bottom: 6px;";
 $inputStyle = "width: 100%; background: var(--panel-glass-strong); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; color: var(--text); font-family: 'Inter', sans-serif;";
 ?>
-<?php if (!$isUpdate): ?>
-<!-- Milestone progress bar (create flow only) -->
+<!-- Milestone progress bar -->
 <div style="display: flex; align-items: center; margin-bottom: 26px; max-width: 520px;">
     <?php foreach (['Basics', 'Dataset', 'Rules & Rewards'] as $i => $label): ?>
         <?php $n = $i + 1; ?>
@@ -35,7 +34,6 @@ $inputStyle = "width: 100%; background: var(--panel-glass-strong); border: 1px s
         <?php endif; ?>
     <?php endforeach; ?>
 </div>
-<?php endif; ?>
 
 <div class="panel" style="max-width: 720px;">
     <?php $form = ActiveForm::begin(['options' => ['enctype' => 'multipart/form-data', 'id' => 'competition-form']]); ?>
@@ -69,8 +67,8 @@ $inputStyle = "width: 100%; background: var(--panel-glass-strong); border: 1px s
     </div>
 
     <!-- ===================== STEP 2: DATASET ===================== -->
-    <div class="wizard-step" data-step="2" style="<?= $isUpdate ? '' : 'display: none;' ?>">
-        <?php if (!$isUpdate): ?><hr style="border: none; border-top: 1px solid var(--border); margin: 0 0 22px;"><?php endif; ?>
+    <div class="wizard-step" data-step="2" style="display: none;">
+        <hr style="border: none; border-top: 1px solid var(--border); margin: 0 0 22px;">
 
         <div style="margin-bottom: 18px;">
             <label style="<?= $labelStyle ?>">
@@ -123,8 +121,8 @@ $inputStyle = "width: 100%; background: var(--panel-glass-strong); border: 1px s
     </div>
 
     <!-- ===================== STEP 3: RULES & REWARDS ===================== -->
-    <div class="wizard-step" data-step="3" style="<?= $isUpdate ? '' : 'display: none;' ?>">
-        <?php if (!$isUpdate): ?><hr style="border: none; border-top: 1px solid var(--border); margin: 0 0 22px;"><?php endif; ?>
+    <div class="wizard-step" data-step="3" style="display: none;">
+        <hr style="border: none; border-top: 1px solid var(--border); margin: 0 0 22px;">
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px;">
             <div>
@@ -186,19 +184,14 @@ $inputStyle = "width: 100%; background: var(--panel-glass-strong); border: 1px s
 
     <!-- ===================== NAVIGATION ===================== -->
     <div style="display: flex; gap: 10px; margin-top: 8px;">
-        <?php if (!$isUpdate): ?>
-            <button type="button" id="wizard-back" class="nav-item" style="display: none; padding: 10px 24px; border: 1px solid var(--border); cursor: pointer;" onclick="wizardGo(-1)">Back</button>
-            <button type="button" id="wizard-next" class="nav-item active" style="display: inline-flex; padding: 10px 24px; border: 1px solid var(--border-strong); cursor: pointer;" onclick="wizardGo(1)">Next</button>
-            <button type="submit" id="wizard-submit" class="nav-item active" style="display: none; padding: 10px 24px; border: 1px solid var(--border-strong); cursor: pointer;">Submit for Review</button>
-        <?php else: ?>
-            <button type="submit" class="nav-item active" style="display: inline-flex; padding: 10px 24px; border: 1px solid var(--border-strong); cursor: pointer;">Save Changes</button>
-        <?php endif; ?>
+        <button type="button" id="wizard-back" class="nav-item" style="display: none; padding: 10px 24px; border: 1px solid var(--border); cursor: pointer;" onclick="wizardGo(-1)">Back</button>
+        <button type="button" id="wizard-next" class="nav-item active" style="display: inline-flex; padding: 10px 24px; border: 1px solid var(--border-strong); cursor: pointer;" onclick="wizardGo(1)">Next</button>
+        <button type="submit" id="wizard-submit" class="nav-item active" style="display: none; padding: 10px 24px; border: 1px solid var(--border-strong); cursor: pointer;"><?= $isUpdate ? 'Save Changes' : 'Submit for Review' ?></button>
     </div>
 
     <?php ActiveForm::end(); ?>
 </div>
 
-<?php if (!$isUpdate): ?>
 <script>
 (function () {
     var current = 1;
@@ -244,4 +237,3 @@ $inputStyle = "width: 100%; background: var(--panel-glass-strong); border: 1px s
     };
 })();
 </script>
-<?php endif; ?>

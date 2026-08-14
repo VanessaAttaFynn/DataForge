@@ -6,7 +6,11 @@
 use yii\helpers\Html;
 
 // Register the stylesheet + Google fonts.
-$this->registerCssFile('@web/css/dataforge.css', ['depends' => []]);
+// Cache-bust with the file's actual modification time, so browsers always
+// fetch a fresh copy the moment this file changes on disk — no more
+// stale-CSS confusion from browser caching.
+$cssVersion = @filemtime(Yii::getAlias('@webroot/css/dataforge.css')) ?: time();
+$this->registerCssFile('@web/css/dataforge.css?v=' . $cssVersion, ['depends' => []]);
 $this->registerCssFile(
     'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700'
     . '&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap'

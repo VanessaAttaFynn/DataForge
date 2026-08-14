@@ -53,8 +53,8 @@ class ScoringService
     {
         $map = [];
         if (($handle = fopen($path, 'r')) !== false) {
-            fgetcsv($handle); // skip header
-            while (($row = fgetcsv($handle)) !== false) {
+            fgetcsv($handle, 0, ',', '"', '\\'); // skip header
+            while (($row = fgetcsv($handle, 0, ',', '"', '\\')) !== false) {
                 if (isset($row[0])) {
                     $map[$row[0]] = $row[1] ?? null;
                 }
