@@ -7,6 +7,7 @@ namespace app\controllers;
 use Yii;
 use app\models\ContactForm;
 use app\models\LoginForm;
+use app\models\SignupForm;
 use yii\captcha\CaptchaAction;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
@@ -15,6 +16,7 @@ use yii\mail\MailerInterface;
 use yii\web\Controller;
 use yii\web\ErrorAction;
 use yii\web\Response;
+use app\models\User;
 
 class SiteController extends Controller
 {
@@ -81,38 +83,68 @@ class SiteController extends Controller
         return $this->render('index');
     }
 
-    /**
-     * Login action.
-     *
-     * @return Response|string
-     */
-    public function actionLogin(): Response|string
+
+
+    public function actionSignup()
     {
+        $this->layout = 'blank';
+
         if (!Yii::$app->user->isGuest) {
             return $this->goHome();
         }
 
-        $model = new LoginForm($this->security);
+        $model = new SignupForm();
 
-        if ($model->load($this->request->post()) && $model->login()) {
+        if (Yii::$app->request->isPost && $model->load(Yii::$app->request->post())) {
+            $user = $model->signup();
+            if ($user !== null) {
+                Yii::$app->session->setFlash('success', 'Account created! Check your email to verify your account before logging in.');
+                return $this->redirect(['site/login']);
+            }
+        }
+
+        return $this->render('signup', ['model' => $model]);
+    }
+
+    public function actionLogin()
+    {
+        $this->layout = 'blank';
+
+        if (!Yii::$app->user->isGuest) {
+            return $this->goHome();
+        }
+
+        $model = new LoginForm();
+
+        if ($model->load(Yii::$app->request->post()) && $model->login()) {
             return $this->goBack();
         }
 
         $model->password = '';
-
         return $this->render('login', ['model' => $model]);
     }
 
-    /**
-     * Logout action.
-     *
-     * @return Response
-     */
-    public function actionLogout(): Response
+    public function actionLogout()
     {
         Yii::$app->user->logout();
-
         return $this->goHome();
+    }
+
+    public function actionVerifyEmail(string $token)
+    {
+        $user = User::findByVerificationToken($token);
+
+        if ($user === null) {
+            Yii::$app->session->setFlash('error', 'This verification link is invalid or has already been used.');
+            return $this->redirect(['site/login']);
+        }
+
+        $user->status = User::STATUS_ACTIVE;
+        $user->verification_token = null;
+        $user->save(false);
+
+        Yii::$app->session->setFlash('success', 'Email verified! You can now log in.');
+        return $this->redirect(['site/login']);
     }
 
     /**
@@ -151,5 +183,10 @@ class SiteController extends Controller
     public function actionAbout(): string
     {
         return $this->render('about');
+    }
+
+    public function actionDashboard()
+    {
+        return $this->render('dashboard');
     }
 }

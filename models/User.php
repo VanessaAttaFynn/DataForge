@@ -1,97 +1,157 @@
 <?php
 
-declare(strict_types=1);
-
 namespace app\models;
 
-use yii\base\BaseObject;
+use Yii;
+use yii\db\ActiveRecord;
 use yii\web\IdentityInterface;
+use yii\behaviors\TimestampBehavior;
 
-class User extends BaseObject implements IdentityInterface
+/**
+ * @property int $id
+ * @property string $username
+ * @property string $auth_key
+ * @property string $password_hash
+ * @property string|null $password_reset_token
+ * @property string $email
+ * @property int $status
+ * @property string|null $verification_token
+ */
+class User extends ActiveRecord implements IdentityInterface
 {
-    public int|string $id = '';
-    public string $username = '';
-    public string $passwordHash = '';
-    public string $authKey = '';
-    public string $accessToken = '';
-    private static array $_users = [
-        '100' => [
-            'id' => '100',
-            'username' => 'admin',
-            // password: admin
-            'passwordHash' => '$2y$13$gYAywKSkhfZDq9FLNdm7buKnvlRxDexf5xipSMAxQPDUxpaptmZJu',
-            'authKey' => 'test100key',
-            'accessToken' => '100-token',
-        ],
-        '101' => [
-            'id' => '101',
-            'username' => 'demo',
-            // password: demo
-            'passwordHash' => '$2y$13$alRLq1PGVMlGYwS/Y3iy3ewQns1Z8ol8Iq6Zb5k7ZwEhblA1aL29y',
-            'authKey' => 'test101key',
-            'accessToken' => '101-token',
-        ],
-    ];
-    /**
-     * {@inheritdoc}
-     */
-    public static function findIdentity($id): static|null
+    const STATUS_UNVERIFIED = 9;   // signed up, hasn't clicked the email link yet
+    const STATUS_ACTIVE = 10;
+    const STATUS_DELETED = 0;
+
+    // Only these two domains are allowed to register.
+    const DOMAIN_STAFF = 'ug.edu.gh';
+    const DOMAIN_STUDENT = 'st.ug.edu.gh';
+
+    public static function tableName()
     {
-        return isset(self::$_users[$id]) ? new static(self::$_users[$id]) : null;
+        return '{{%user}}';
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function findIdentityByAccessToken($token, $type = null): static|null
+    public function behaviors()
     {
-        foreach (self::$_users as $user) {
-            if ($user['accessToken'] === $token) {
-                return new static($user);
-            }
+        return [TimestampBehavior::class];
+    }
+
+    public function rules()
+    {
+        return [
+            [['username', 'email', 'password_hash', 'auth_key'], 'required'],
+            [['username', 'email'], 'unique'],
+            [['username'], 'string', 'min' => 3, 'max' => 255],
+            [['email'], 'email'],
+            [['email'], 'validateUniversityEmail'],
+            [['status'], 'integer'],
+        ];
+    }
+
+    /** Only @ug.edu.gh and @st.ug.edu.gh addresses are allowed to register. */
+    public function validateUniversityEmail(string $attribute): void
+    {
+        $email = strtolower($this->$attribute);
+        $domain = substr(strrchr($email, '@'), 1);
+
+        if (!in_array($domain, [self::DOMAIN_STAFF, self::DOMAIN_STUDENT], true)) {
+            $this->addError($attribute, 'You must sign up with a ug.edu.gh or st.ug.edu.gh email address.');
         }
-
-        return null;
     }
 
-    /**
-     * Finds user by username
-     *
-     * @param string $username
-     * @return static|null
-     */
-    public static function findByUsername(string $username): static|null
+    public function isStudentEmail(): bool
     {
-        foreach (self::$_users as $user) {
-            if (strcasecmp($user['username'], $username) === 0) {
-                return new static($user);
-            }
+        $domain = substr(strrchr(strtolower($this->email), '@'), 1);
+        return $domain === self::DOMAIN_STUDENT;
+    }
+
+    // ---------- IdentityInterface ----------
+
+    public static function findIdentity($id)
+    {
+        return static::findOne(['id' => $id, 'status' => self::STATUS_ACTIVE]);
+    }
+
+    public static function findIdentityByAccessToken($token, $type = null)
+    {
+        throw new \yii\base\NotSupportedException('Access-token auth is not implemented.');
+    }
+
+    public function getId()
+    {
+        return $this->getPrimaryKey();
+    }
+
+    public function getAuthKey()
+    {
+        return $this->auth_key;
+    }
+
+    public function validateAuthKey($authKey)
+    {
+        return $this->auth_key === $authKey;
+    }
+
+    // ---------- Lookups ----------
+
+    public static function findByUsername(string $username): ?self
+    {
+        return static::find()
+            ->where(['status' => self::STATUS_ACTIVE])
+            ->andWhere(['or', ['username' => $username], ['email' => $username]])
+            ->one();
+    }
+
+    /** Includes unverified accounts — used by the login form to give a clear error. */
+    public static function findByUsernameAnyStatus(string $username): ?self
+    {
+        return static::find()
+            ->where(['or', ['username' => $username], ['email' => $username]])
+            ->one();
+    }
+
+    public static function findByVerificationToken(string $token): ?self
+    {
+        return static::findOne(['verification_token' => $token, 'status' => self::STATUS_UNVERIFIED]);
+    }
+
+    // ---------- Password / tokens ----------
+
+    public function validatePassword(string $password): bool
+    {
+        return Yii::$app->security->validatePassword($password, $this->password_hash);
+    }
+
+    public function setPassword(string $password): void
+    {
+        $this->password_hash = Yii::$app->security->generatePasswordHash($password);
+    }
+
+    public function generateAuthKey(): void
+    {
+        $this->auth_key = Yii::$app->security->generateRandomString();
+    }
+
+    public function generateVerificationToken(): void
+    {
+        $this->verification_token = Yii::$app->security->generateRandomString() . '_' . time();
+    }
+
+    // ---------- Role display helper ----------
+
+    public function getRoleNames(): array
+    {
+        return array_keys(Yii::$app->authManager->getRolesByUser($this->id));
+    }
+
+    public function getInitials(): string
+    {
+        $parts = preg_split('/[\s._-]+/', trim($this->username));
+        $parts = array_filter($parts);
+        if (count($parts) >= 2) {
+            return strtoupper(mb_substr($parts[0], 0, 1) . mb_substr($parts[1], 0, 1));
         }
-
-        return null;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getId(): int|string
-    {
-        return $this->id;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getAuthKey(): string|null
-    {
-        return $this->authKey;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function validateAuthKey($authKey): bool
-    {
-        return $this->authKey === $authKey;
+        return strtoupper(mb_substr($this->username, 0, 2));
     }
 }

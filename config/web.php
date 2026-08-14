@@ -26,12 +26,18 @@ $config = [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
             'cookieValidationKey' => 'Lf23StbMGVvaBCzScABC9rYXoEayii2T',
         ],
+        'authManager' => [
+            'class' => 'yii\rbac\DbManager',
+        ],
         'cache' => [
             'class' => \yii\caching\FileCache::class,
         ],
         'user' => [
             'identityClass' => \app\models\User::class,
             'enableAutoLogin' => true,
+        ],
+        'session' => [
+            'timeout' => 3600 * 24 // 24 hours of inactivity before session expires
         ],
         'errorHandler' => [
             'errorAction' => 'site/error',
@@ -50,8 +56,7 @@ $config = [
         'urlManager' => [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
-            'rules' => [
-            ],
+            'rules' => [],
         ],
     ],
     'params' => $params,

@@ -1,118 +1,64 @@
 <?php
 
-/** @var yii\web\View $this */
-/** @var yii\bootstrap5\ActiveForm $form */
-
+/** @var \yii\web\View $this */
 /** @var app\models\LoginForm $model */
 
-use yii\bootstrap5\ActiveForm;
-use yii\bootstrap5\Html;
+use yii\helpers\Html;
+use yii\widgets\ActiveForm;
 
-$this->title = 'Login to your account';
-$this->params['breadcrumbs'][] = $this->title;
-$this->params['meta_description'] = 'Log in to access your Yii2 application account.';
-$this->params['meta_keywords'] = 'yii, yii2, login, sign in, authentication';
-$htmlIcon = <<<HTML
-{label}<div class="input-group"><span class="input-group-text" aria-hidden="true">%s</span>{input}</div>{error}{hint}
-HTML;
-$labelOptions = ['class' => 'form-label fw-semibold small'];
+$this->title = 'Log In';
 ?>
-<div class="site-login d-flex align-items-center justify-content-center py-5">
-    <div class="card border-0 overflow-hidden login-split-card">
-        <div class="row g-0">
+<div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;">
+    <div class="panel" style="max-width: 400px; width: 100%;">
+        <div style="text-align: center; margin-bottom: 26px;">
+            <div class="brand-mark" style="margin: 0 auto 12px; width: 44px; height: 44px; font-size: 20px;">DF</div>
+            <div class="brand-name" style="font-size: 22px;">DataForge</div>
+            <div class="brand-sub">University of Ghana</div>
+        </div>
 
-            <!-- Brand panel -->
-            <div class="col-md-5 d-none d-md-flex login-brand-panel text-white">
-                <div class="d-flex flex-column justify-content-between p-4 p-lg-5 w-100">
-                    <div>
-                        <?= Html::img(
-                            Yii::getAlias('@web/images/yii3_full_white_for_dark.svg'),
-                            [
-                                'alt' => 'Yii Framework',
-                                'class' => 'mb-4',
-                                'height' => 40,
-                            ],
-                        ) ?>
-                    </div>
-                    <div>
-                        <h2 class="fw-bold mb-3 login-brand-title">
-                            Welcome<br>Back
-                        </h2>
-                        <p class="opacity-75 mb-0 login-brand-text">
-                            Log in to access your Yii2 application and manage your account.
-                        </p>
-                    </div>
-                </div>
+        <?php if (Yii::$app->session->hasFlash('error')): ?>
+            <div style="background: rgba(184,97,90,0.12); border: 1px solid var(--rose); border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; font-size: 12.5px; color: var(--rose);">
+                <?= Html::encode(Yii::$app->session->getFlash('error')) ?>
             </div>
-
-            <!-- Form panel -->
-            <div class="col-md-7">
-                <div class="p-4 p-lg-5">
-                    <div class="text-center mb-4">
-                        <!-- Mobile-only logo -->
-                        <div class="d-md-none mb-3">
-                            <?= Html::img(
-                                Yii::getAlias('@web/images/yii3_full_black_for_light.svg'),
-                                [
-                                    'alt' => 'Yii Framework',
-                                    'class' => 'login-mobile-logo',
-                                    'height' => 36,
-                                ],
-                            ) ?>
-                        </div>
-                        <h1 class="h3 fw-bold mb-1"><?= Html::encode($this->title) ?></h1>
-                        <p class="text-body-secondary small">Enter your credentials to continue</p>
-                    </div>
-
-                    <?php $form = ActiveForm::begin(['id' => 'login-form']); ?>
-
-                    <div class="mb-3">
-                        <?= $form->field($model, 'username', [
-                            'options' => ['class' => 'mb-0'],
-                            'template' => sprintf($htmlIcon, '&#128100;'),
-                            'inputOptions' => [
-                                'class' => 'form-control',
-                                'placeholder' => 'username',
-                                'autofocus' => true,
-                            ],
-                        ])->textInput()->label('Your Username', $labelOptions) ?>
-                    </div>
-
-                    <div class="mb-3">
-                        <?= $form->field($model, 'password', [
-                            'options' => ['class' => 'mb-0'],
-                            'template' => sprintf($htmlIcon, '&#128274;'),
-                            'inputOptions' => [
-                                'class' => 'form-control',
-                                'placeholder' => 'Password',
-                            ],
-                        ])->passwordInput()->label('Your Password', $labelOptions) ?>
-                    </div>
-
-                    <div class="mb-4">
-                        <?= $form->field($model, 'rememberMe')->checkbox() ?>
-                    </div>
-
-                    <div class="d-grid">
-                        <?= Html::submitButton(
-                            'Login',
-                            [
-                                'class' => 'btn login-btn btn-lg rounded-3 text-white',
-                                'name' => 'login-button',
-                            ],
-                        ) ?>
-                    </div>
-
-                    <?php ActiveForm::end(); ?>
-
-                    <div class="text-body-secondary text-center mt-3 small">
-                        You may login with <strong>admin/admin</strong> or <strong>demo/demo</strong>.<br>
-                        To modify the username/password, check <code>app\models\User::$users</code>.
-                    </div>
-
-                </div>
+        <?php endif; ?>
+        <?php if (Yii::$app->session->hasFlash('success')): ?>
+            <div style="background: rgba(74,155,127,0.12); border: 1px solid var(--emerald); border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; font-size: 12.5px; color: var(--emerald);">
+                <?= Html::encode(Yii::$app->session->getFlash('success')) ?>
             </div>
+        <?php endif; ?>
 
+        <?php $form = ActiveForm::begin(['id' => 'login-form']); ?>
+
+        <div style="margin-bottom: 16px;">
+            <label style="font-size: 12.5px; font-weight: 600; color: var(--text-dim); display: block; margin-bottom: 6px;">Username or email</label>
+            <input type="text" name="LoginForm[username]" value="<?= Html::encode($model->username) ?>" required autofocus
+                   style="width: 100%; background: var(--panel-glass-strong); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text); font-family: 'Inter', sans-serif;">
+            <?php foreach ($model->getErrors('username') as $error): ?>
+                <div style="color: var(--rose); font-size: 11.5px; margin-top: 5px;"><?= Html::encode($error) ?></div>
+            <?php endforeach; ?>
+        </div>
+
+        <div style="margin-bottom: 10px;">
+            <label style="font-size: 12.5px; font-weight: 600; color: var(--text-dim); display: block; margin-bottom: 6px;">Password</label>
+            <input type="password" name="LoginForm[password]" required
+                   style="width: 100%; background: var(--panel-glass-strong); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; color: var(--text); font-family: 'Inter', sans-serif;">
+            <?php foreach ($model->getErrors('password') as $error): ?>
+                <div style="color: var(--rose); font-size: 11.5px; margin-top: 5px;"><?= Html::encode($error) ?></div>
+            <?php endforeach; ?>
+        </div>
+
+        <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-dim); margin-bottom: 20px;">
+            <input type="checkbox" name="LoginForm[rememberMe]" value="1" checked> Remember me
+        </label>
+
+        <button type="submit" class="nav-item active" style="width: 100%; justify-content: center; padding: 11px; border: 1px solid var(--border-strong); cursor: pointer;">
+            Log In
+        </button>
+
+        <?php ActiveForm::end(); ?>
+
+        <div style="text-align: center; margin-top: 18px; font-size: 12.5px; color: var(--text-faint);">
+            No account? <?= Html::a('Sign up', ['site/signup'], ['style' => 'color: var(--gold);']) ?>
         </div>
     </div>
 </div>
