@@ -64,8 +64,8 @@ function navActive($routes, $route)
         <div class="nav-label">My Space</div>
         <?= Html::a(
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6.5 6.5-6.5S15.5 16.4 15.5 20"/><circle cx="17.5" cy="9" r="2.8"/><path d="M21.5 20c0-2.8-1.9-5-4.5-5.7"/></svg> My Teams',
-            ['/team/index'],
-            ['class' => 'nav-item' . navActive('team/index', $route)]
+            ['/team/my'],
+            ['class' => 'nav-item' . navActive('team/my', $route)]
         ) ?>
         <?= Html::a(
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 21h8M12 17v4M5 4h14l-1 8a6 6 0 0 1-12 0L5 4Z"/><path d="M5 6H3a2 2 0 0 0 2 4M19 6h2a2 2 0 0 1-2 4"/></svg> Leaderboard',

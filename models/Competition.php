@@ -55,6 +55,11 @@ class Competition extends ActiveRecord
                 self::REWARD_CERTIFICATE, self::REWARD_POINTS, self::REWARD_OTHER,
             ]],
             [['answer_key_path'], 'string', 'max' => 255],
+            [['dataset_file_path'], 'string', 'max' => 255],
+            [['dataset_description'], 'string'],
+            [['dataset_target_column'], 'string', 'max' => 100],
+            [['dataset_license'], 'string', 'max' => 150],
+            [['dataset_rows', 'dataset_columns', 'dataset_sheets'], 'integer'],
             ['submission_cap_per_day', 'default', 'value' => self::RECOMMENDED_SUBMISSION_CAP_MIN],
         ];
     }

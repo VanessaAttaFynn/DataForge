@@ -460,3 +460,39 @@
   text-decoration: none;
 }
 .account-dropdown-link:hover { background: var(--panel-glass-strong); color: var(--text); }
+
+/* ---------- SUBMIT-TO-COMPETITION MODAL ---------- */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(11,14,20,0.72);
+  backdrop-filter: blur(4px);
+  z-index: 500;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+
+.modal-panel {
+  background: var(--panel);
+  border: 1px solid var(--border-strong);
+  border-radius: 18px;
+  padding: 24px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+}
+
+.dropzone {
+  border: 1.5px dashed var(--border-strong);
+  border-radius: 14px;
+  padding: 32px 20px;
+  text-align: center;
+  background: var(--panel-glass);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.dropzone.dragover {
+  border-color: var(--gold);
+  background: rgba(212,175,106,0.08);
+}
