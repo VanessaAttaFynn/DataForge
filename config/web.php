@@ -37,7 +37,7 @@ $config = [
             'enableAutoLogin' => true,
         ],
         'session' => [
-            'timeout' => 3600 * 24 // 24 hours of inactivity before session expires
+            'timeout' => 600 // 10mins of inactivity before session expires
         ],
         'errorHandler' => [
             'errorAction' => 'site/error',
