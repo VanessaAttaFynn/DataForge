@@ -16,7 +16,15 @@ use yii\mail\MailerInterface;
 use yii\web\Controller;
 use yii\web\ErrorAction;
 use yii\web\Response;
+use app\models\TeamMembership;
 use app\models\User;
+use app\models\Post;
+use app\models\Team;
+use app\models\Vote;
+use app\models\Notification;
+use app\models\TeamCompetitionRegistration;
+use app\models\CompetitionRegistration;
+
 
 class SiteController extends Controller
 {
@@ -41,13 +49,13 @@ class SiteController extends Controller
                 'rules' => [
                     [
                         'allow' => true,
-                        'actions' => ['login', 'signup', 'verify-email'],
-                        'roles' => ['?', '@'], // reachable whether guest or logged in
+                        'actions' => ['login', 'signup', 'verify-email', 'serve-image'],
+                        'roles' => ['?', '@'],
                     ],
                     [
                         'allow' => true,
                         'actions' => ['logout', 'dashboard', 'index'],
-                        'roles' => ['@'], // logged-in only — this is what was missing
+                        'roles' => ['@'],
                     ],
                 ],
             ],
@@ -193,6 +201,95 @@ class SiteController extends Controller
 
     public function actionDashboard()
     {
-        return $this->render('dashboard');
+        $userId = Yii::$app->user->id;
+
+        // ---------- Real stat counts ----------
+        $myTeamIds = TeamMembership::find()
+            ->select('team_id')->where(['user_id' => $userId, 'invite_status' => 'consented'])->column();
+
+        $individualCompIds = CompetitionRegistration::find()
+            ->select('competition_id')->where(['user_id' => $userId])->column();
+        $teamCompIds = empty($myTeamIds) ? [] : TeamCompetitionRegistration::find()
+            ->select('competition_id')->where(['in', 'team_id', $myTeamIds])->column();
+        $competitionsJoinedCount = count(array_unique(array_merge($individualCompIds, $teamCompIds)));
+
+        $datasetsPublishedCount = Post::find()->where(['author_id' => $userId, 'type' => 'dataset', 'status' => 'published'])->count();
+        $notebooksPublishedCount = Post::find()->where(['author_id' => $userId, 'type' => 'notebook', 'status' => 'published'])->count();
+        $teamsCount = count($myTeamIds);
+
+        // ---------- Active competitions/hackathons I'm part of (not completed) ----------
+        $joinedCompetitionIds = array_unique(array_merge($individualCompIds, $teamCompIds));
+        $activeCompetitions = [];
+        if (!empty($joinedCompetitionIds)) {
+            $posts = Post::find()->where(['id' => $joinedCompetitionIds, 'status' => 'published'])->all();
+            foreach ($posts as $p) {
+                if ($p->competition->phaseKey() !== 'completed') {
+                    $activeCompetitions[] = $p;
+                }
+            }
+            $activeCompetitions = array_slice($activeCompetitions, 0, 4);
+        }
+
+        // ---------- Trending datasets (top voted, published) ----------
+        $datasetPosts = Post::find()->where(['status' => 'published', 'type' => 'dataset'])->all();
+        $datasetVotes = [];
+        foreach ($datasetPosts as $p) {
+            $datasetVotes[$p->id] = Vote::countFor($p->id);
+        }
+        usort($datasetPosts, fn($a, $b) => $datasetVotes[$b->id] <=> $datasetVotes[$a->id]);
+        $trendingDatasets = array_slice($datasetPosts, 0, 3);
+
+        // ---------- Recent activity = my real notifications ----------
+        $recentNotifications = Notification::find()
+            ->where(['user_id' => $userId])->orderBy(['created_at' => SORT_DESC])->limit(4)->all();
+
+        // ---------- My teams (consented + pending invites) ----------
+        $myTeams = empty($myTeamIds) ? [] : Team::find()->where(['id' => $myTeamIds])->all();
+        $myPendingInvites = TeamMembership::find()
+            ->where(['user_id' => $userId, 'invite_status' => 'invited'])->all();
+
+        return $this->render('dashboard', [
+            'competitionsJoinedCount' => $competitionsJoinedCount,
+            'datasetsPublishedCount' => $datasetsPublishedCount,
+            'notebooksPublishedCount' => $notebooksPublishedCount,
+            'teamsCount' => $teamsCount,
+            'activeCompetitions' => $activeCompetitions,
+            'trendingDatasets' => $trendingDatasets,
+            'datasetVotes' => $datasetVotes,
+            'recentNotifications' => $recentNotifications,
+            'myTeams' => $myTeams,
+            'myPendingInvites' => $myPendingInvites,
+        ]);
+    }
+
+    public function actionServeImage(string $path)
+    {
+        // Only ever serve files under web/uploads/ — reject anything else,
+        // including any attempt to climb out with '../'.
+        $path = ltrim($path, '/');
+        if (!str_starts_with($path, 'uploads/') || str_contains($path, '..')) {
+            throw new NotFoundHttpException('Not found.');
+        }
+
+        $fullPath = Yii::getAlias('@webroot/' . $path);
+        if (!file_exists($fullPath) || !is_file($fullPath)) {
+            throw new NotFoundHttpException('Image not found.');
+        }
+
+        $mimeTypes = [
+            'png' => 'image/png',
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'gif' => 'image/gif',
+            'webp' => 'image/webp',
+            'svg' => 'image/svg+xml',
+        ];
+        $ext = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
+        $mimeType = $mimeTypes[$ext] ?? 'application/octet-stream';
+
+        return Yii::$app->response->sendFile($fullPath, null, [
+            'mimeType' => $mimeType,
+            'inline' => true, // display in the page, not a download prompt
+        ]);
     }
 }

@@ -1,76 +1,41 @@
 <?php
 
-/** @var \yii\web\View $this */
+/** @var int $competitionsJoinedCount */
+/** @var int $datasetsPublishedCount */
+/** @var int $notebooksPublishedCount */
+/** @var int $teamsCount */
+/** @var app\models\Post[] $activeCompetitions */
+/** @var app\models\Post[] $trendingDatasets */
+/** @var array $datasetVotes */
+/** @var app\models\Notification[] $recentNotifications */
+/** @var app\models\Team[] $myTeams */
+/** @var app\models\TeamMembership[] $myPendingInvites */
+
+use yii\helpers\Html;
 
 $this->title = 'Dashboard';
+$user = Yii::$app->user->identity;
 ?>
 <div class="topbar">
     <div>
         <div class="eyebrow">Welcome back</div>
-        <h1 class="page-title">Kwame Asante</h1>
-        <div class="page-sub">Level 4 · Computer Science — here's what's happening across DataForge.</div>
-    </div>
-    <div class="search-box">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-        <input type="text" placeholder="Search datasets, competitions, people…">
+        <h1 class="page-title"><?= Html::encode($user->username) ?></h1>
+        <div class="page-sub">Here's what's happening across DataForge.</div>
     </div>
 </div>
 
-<div class="stat-row">
-    <div class="stat-card">
-        <div class="ring-wrap">
-            <svg width="58" height="58" viewBox="0 0 58 58">
-                <circle class="ring-bg" cx="29" cy="29" r="24"/>
-                <circle class="ring-fg" cx="29" cy="29" r="24" stroke-dasharray="151" stroke-dashoffset="38"/>
-            </svg>
-            <div class="ring-center">75%</div>
-        </div>
-        <div class="stat-info">
-            <div class="stat-num">Gold</div>
-            <div class="stat-label">Current tier</div>
-        </div>
+<div class="stat-row" style="grid-template-columns: repeat(4, 1fr);">
+    <div class="stat-card" style="justify-content: center; text-align: center;">
+        <div><div class="stat-num" style="font-size: 22px;"><?= $competitionsJoinedCount ?></div><div class="stat-label">Competitions Joined</div></div>
     </div>
-
-    <div class="stat-card">
-        <div class="ring-wrap">
-            <svg width="58" height="58" viewBox="0 0 58 58">
-                <circle class="ring-bg" cx="29" cy="29" r="24"/>
-                <circle class="ring-fg emerald" cx="29" cy="29" r="24" stroke-dasharray="151" stroke-dashoffset="60"/>
-            </svg>
-            <div class="ring-center">60%</div>
-        </div>
-        <div class="stat-info">
-            <div class="stat-num">2,340</div>
-            <div class="stat-label">Ranking points</div>
-        </div>
+    <div class="stat-card" style="justify-content: center; text-align: center;">
+        <div><div class="stat-num" style="font-size: 22px;"><?= $datasetsPublishedCount ?></div><div class="stat-label">Datasets Published</div></div>
     </div>
-
-    <div class="stat-card">
-        <div class="ring-wrap">
-            <svg width="58" height="58" viewBox="0 0 58 58">
-                <circle class="ring-bg" cx="29" cy="29" r="24"/>
-                <circle class="ring-fg" cx="29" cy="29" r="24" stroke-dasharray="151" stroke-dashoffset="105"/>
-            </svg>
-            <div class="ring-center">4/10</div>
-        </div>
-        <div class="stat-info">
-            <div class="stat-num">4</div>
-            <div class="stat-label">Submissions today</div>
-        </div>
+    <div class="stat-card" style="justify-content: center; text-align: center;">
+        <div><div class="stat-num" style="font-size: 22px;"><?= $notebooksPublishedCount ?></div><div class="stat-label">Notebooks Published</div></div>
     </div>
-
-    <div class="stat-card">
-        <div class="ring-wrap">
-            <svg width="58" height="58" viewBox="0 0 58 58">
-                <circle class="ring-bg" cx="29" cy="29" r="24"/>
-                <circle class="ring-fg emerald" cx="29" cy="29" r="24" stroke-dasharray="151" stroke-dashoffset="90"/>
-            </svg>
-            <div class="ring-center">3</div>
-        </div>
-        <div class="stat-info">
-            <div class="stat-num">3 Active</div>
-            <div class="stat-label">Competitions joined</div>
-        </div>
+    <div class="stat-card" style="justify-content: center; text-align: center;">
+        <div><div class="stat-num" style="font-size: 22px;"><?= $teamsCount ?></div><div class="stat-label">Teams</div></div>
     </div>
 </div>
 
@@ -79,132 +44,101 @@ $this->title = 'Dashboard';
         <div class="panel">
             <div class="panel-head">
                 <div class="panel-title">Active Competitions & Hackathons</div>
-                <div class="panel-link">View all →</div>
+                <?= Html::a('View all →', ['/competition/mine'], ['class' => 'panel-link']) ?>
             </div>
 
-            <div class="comp-item">
-                <div class="comp-icon">🏆</div>
-                <div>
-                    <div class="comp-name">Crop Yield Prediction Challenge</div>
-                    <div class="comp-meta">Dept. of Agric Engineering · Team · 218 entrants</div>
-                </div>
-                <div class="comp-tag tag-live">Live · 3d left</div>
-            </div>
-
-            <div class="comp-item">
-                <div class="comp-icon">⚡</div>
-                <div>
-                    <div class="comp-name">UG FinTech Hackathon 2026</div>
-                    <div class="comp-meta">Business School · Individual or Team · 94 entrants</div>
-                </div>
-                <div class="comp-tag tag-closing">Closes tonight</div>
-            </div>
-
-            <div class="comp-item">
-                <div class="comp-icon">🧬</div>
-                <div>
-                    <div class="comp-name">Malaria Cell Classification</div>
-                    <div class="comp-meta">Noguchi Institute · Individual · 156 entrants</div>
-                </div>
-                <div class="comp-tag tag-new">Newly approved</div>
-            </div>
-
-            <div class="comp-item">
-                <div class="comp-icon">📡</div>
-                <div>
-                    <div class="comp-name">Campus Traffic Flow Optimization</div>
-                    <div class="comp-meta">Dept. of Statistics · Team · 67 entrants</div>
-                </div>
-                <div class="comp-tag tag-live">Live · 11d left</div>
-            </div>
+            <?php if (empty($activeCompetitions)): ?>
+                <p style="color: var(--text-faint); font-size: 12.5px;">You haven't joined any active competitions yet.</p>
+            <?php else: ?>
+                <?php foreach ($activeCompetitions as $post): ?>
+                    <?= Html::a(
+                        Html::tag('div',
+                            '<div class="comp-icon">' . ($post->type === 'hackathon' ? '⚡' : '🏆') . '</div>'
+                            . '<div><div class="comp-name">' . Html::encode($post->title) . '</div>'
+                            . '<div class="comp-meta">' . strtoupper($post->type) . '</div></div>'
+                            . '<div class="comp-tag tag-live">' . Html::encode($post->competition->phaseLabel()) . '</div>',
+                            ['class' => 'comp-item']
+                        ),
+                        ['/competition/view', 'id' => $post->id],
+                        ['style' => 'text-decoration: none; display: block;']
+                    ) ?>
+                <?php endforeach; ?>
+            <?php endif; ?>
         </div>
 
         <div class="panel">
             <div class="panel-head">
                 <div class="panel-title">Trending Datasets</div>
-                <div class="panel-link">Browse all →</div>
+                <?= Html::a('Browse all →', ['/dataset/index'], ['class' => 'panel-link']) ?>
             </div>
-            <div class="dataset-row">
-                <div class="dataset-card">
-                    <div class="dataset-verified">✓ Verified</div>
-                    <div class="dataset-title">Ghana Rainfall 2010–2025</div>
-                    <div class="dataset-meta">CSV · 12.4 MB · 340 downloads</div>
+            <?php if (empty($trendingDatasets)): ?>
+                <p style="color: var(--text-faint); font-size: 12.5px;">No datasets published yet.</p>
+            <?php else: ?>
+                <div class="dataset-row">
+                    <?php foreach ($trendingDatasets as $post): ?>
+                        <?= Html::a(
+                            Html::tag('div',
+                                '<div class="dataset-verified"' . ($post->verified ? '' : ' style="color: var(--text-faint);"') . '>'
+                                . ($post->verified ? '✓ Verified' : '◌ Unverified') . '</div>'
+                                . '<div class="dataset-title">' . Html::encode($post->title) . '</div>'
+                                . '<div class="dataset-meta">▲ ' . ($datasetVotes[$post->id] ?? 0) . ' votes</div>',
+                                ['class' => 'dataset-card']
+                            ),
+                            ['/dataset/view', 'id' => $post->id],
+                            ['style' => 'text-decoration: none;']
+                        ) ?>
+                    <?php endforeach; ?>
                 </div>
-                <div class="dataset-card">
-                    <div class="dataset-verified">✓ Verified</div>
-                    <div class="dataset-title">Accra Traffic Sensor Logs</div>
-                    <div class="dataset-meta">CSV · 8.1 MB · 212 downloads</div>
-                </div>
-                <div class="dataset-card">
-                    <div class="dataset-verified" style="color: var(--text-faint);">◌ Unverified</div>
-                    <div class="dataset-title">Student Sleep Patterns Survey</div>
-                    <div class="dataset-meta">CSV · 1.2 MB · 58 downloads</div>
-                </div>
-            </div>
+            <?php endif; ?>
         </div>
     </div>
 
     <div>
         <div class="panel">
-            <div class="panel-head">
-                <div class="panel-title">Recent Activity</div>
-            </div>
-            <div class="feed-item">
-                <div class="feed-dot"></div>
-                <div>
-                    <div class="feed-text"><strong>Team Kernel Panic</strong> submitted to Crop Yield Prediction — score 0.891</div>
-                    <div class="feed-time">14 MIN AGO</div>
-                </div>
-            </div>
-            <div class="feed-item">
-                <div class="feed-dot" style="background: var(--emerald);"></div>
-                <div>
-                    <div class="feed-text"><strong>Ama Boateng</strong> invited you to join <strong>Team Nyansa</strong></div>
-                    <div class="feed-time">1 HR AGO</div>
-                </div>
-            </div>
-            <div class="feed-item">
-                <div class="feed-dot"></div>
-                <div>
-                    <div class="feed-text">Your dataset <strong>Accra Traffic Sensor Logs</strong> was marked Verified</div>
-                    <div class="feed-time">3 HRS AGO</div>
-                </div>
-            </div>
-            <div class="feed-item">
-                <div class="feed-dot" style="background: var(--rose);"></div>
-                <div>
-                    <div class="feed-text"><strong>UG FinTech Hackathon</strong> closes in 6 hours — 2 submissions remaining</div>
-                    <div class="feed-time">5 HRS AGO</div>
-                </div>
-            </div>
+            <div class="panel-head"><div class="panel-title">Recent Activity</div></div>
+            <?php if (empty($recentNotifications)): ?>
+                <p style="color: var(--text-faint); font-size: 12.5px;">Nothing yet.</p>
+            <?php else: ?>
+                <?php foreach ($recentNotifications as $n): ?>
+                    <div class="feed-item">
+                        <div class="feed-dot" style="<?= !$n->is_read ? '' : 'background: var(--text-faint);' ?>"></div>
+                        <div>
+                            <div class="feed-text"><?= Html::encode($n->message) ?></div>
+                            <div class="feed-time"><?= strtoupper(Yii::$app->formatter->asRelativeTime($n->created_at)) ?></div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php endif; ?>
         </div>
 
         <div class="panel">
             <div class="panel-head">
                 <div class="panel-title">My Teams</div>
-                <div class="panel-link">Manage →</div>
+                <?= Html::a('Manage →', ['/team/my'], ['class' => 'panel-link']) ?>
             </div>
-            <div class="team-chip">
-                <div class="avatar-stack">
-                    <div class="avatar">KA</div>
-                    <div class="avatar">AB</div>
-                    <div class="avatar">JM</div>
+            <?php if (empty($myTeams) && empty($myPendingInvites)): ?>
+                <p style="color: var(--text-faint); font-size: 12.5px;">You're not on any teams yet.</p>
+            <?php endif; ?>
+            <?php foreach ($myTeams as $team): ?>
+                <div class="team-chip">
+                    <div class="avatar" style="margin-left: 0;"><?= Html::encode(mb_substr($team->name, 0, 2)) ?></div>
+                    <div class="team-info">
+                        <div class="team-name"><?= Html::encode($team->name) ?></div>
+                        <div class="team-meta"><?= $team->getConsentedMemberCount() ?>/<?= $team->cap ?> members</div>
+                    </div>
                 </div>
-                <div class="team-info">
-                    <div class="team-name">Team Kernel Panic</div>
-                    <div class="team-meta">Crop Yield Challenge · Rank #12</div>
+            <?php endforeach; ?>
+            <?php foreach ($myPendingInvites as $inv): ?>
+                <div class="team-chip">
+                    <div class="avatar" style="margin-left: 0;"><?= Html::encode(mb_substr($inv->team->name, 0, 2)) ?></div>
+                    <div class="team-info">
+                        <div class="team-name"><?= Html::encode($inv->team->name) ?> (invited)</div>
+                        <div class="team-meta">Awaiting your consent</div>
+                    </div>
                 </div>
-            </div>
-            <div class="team-chip">
-                <div class="avatar-stack">
-                    <div class="avatar">KA</div>
-                    <div class="avatar">SO</div>
-                </div>
-                <div class="team-info">
-                    <div class="team-name">Team Nyansa (invited)</div>
-                    <div class="team-meta">Awaiting your consent</div>
-                </div>
-            </div>
+            <?php endforeach; ?>
         </div>
     </div>
 </div>
+
+<?php $this->registerJsFile('@web/js/tour.js?v=' . (@filemtime(Yii::getAlias('@webroot/js/tour.js')) ?: time()), ['position' => \yii\web\View::POS_END]); ?>

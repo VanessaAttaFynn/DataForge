@@ -38,6 +38,7 @@ $unreadCount = $currentUser
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?= Html::csrfMetaTags() ?>
     <title><?= Html::encode($this->title) ?></title>
+    <link rel="icon" href="<?= Yii::$app->request->baseUrl ?>/favicon.ico" type="image/x-icon">
     <?php $this->head() ?>
 </head>
 <body data-theme="dark">
@@ -53,7 +54,7 @@ $unreadCount = $currentUser
     </button>
 
     <div class="account-menu-wrap">
-        <button type="button" class="avatar account-trigger" onclick="document.getElementById('account-dropdown').classList.toggle('open')">
+        <button type="button" class="avatar account-trigger" data-tour="profile" onclick="document.getElementById('account-dropdown').classList.toggle('open')">
             <?= \yii\helpers\Html::encode($currentUser->initials) ?>
         </button>
         <div id="account-dropdown" class="account-dropdown">

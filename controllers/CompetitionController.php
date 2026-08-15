@@ -23,26 +23,46 @@ class CompetitionController extends Controller
             'access' => [
                 'class' => AccessControl::class,
                 'rules' => [
-                    ['allow' => true, 'actions' => ['index', 'view', 'teams', 'leaderboard'], 'roles' => ['?', '@']],
-                    ['allow' => true, 'actions' => ['create', 'update', 'delete', 'mine', 'dataset', 'register-team', 'submit', 'submissions', 'my-submissions'], 'roles' => ['@']],
+                    ['allow' => true, 'actions' => ['index', 'view', 'teams', 'leaderboard', 'download-dataset'], 'roles' => ['?', '@']],
+                    ['allow' => true, 'actions' => ['create', 'update', 'delete', 'mine', 'dataset', 'register', 'register-team', 'submit', 'submissions', 'my-submissions', 'contribute'], 'roles' => ['@']],
                 ],
             ],
         ];
     }
 
     /** Published competitions/hackathons only — the public browse page. */
-    public function actionIndex(string $view = 'list')
+    /** Browse — search, filter by type/reward/status, sort by date or reward, asc/desc. */
+    public function actionIndex(string $view = 'list', string $q = '', string $type = '', string $reward = '', string $status = '', string $sort = 'date', string $order = 'desc')
     {
-        $posts = Post::find()
-            ->where(['status' => Post::STATUS_PUBLISHED])
+        $query = Post::find()->where(['status' => Post::STATUS_PUBLISHED])
             ->andWhere(['type' => Post::TYPES_REQUIRING_APPROVAL])
-            ->orderBy(['created_at' => SORT_DESC])
-            ->all();
+            ->innerJoinWith('competition');
+
+        if (trim($q) !== '') {
+            $query->andWhere(['like', '{{%post}}.title', $q]);
+        }
+        if (in_array($type, ['competition', 'hackathon'], true)) {
+            $query->andWhere(['{{%post}}.type' => $type]);
+        }
+        if (trim($reward) !== '') {
+            $query->andWhere(['{{%competition}}.reward_type' => $reward]);
+        }
+
+        $sortColumn = $sort === 'reward' ? '{{%competition}}.reward_type' : '{{%post}}.created_at';
+        $sortDir = $order === 'asc' ? SORT_ASC : SORT_DESC;
+        $posts = $query->orderBy([$sortColumn => $sortDir])->all();
+
+        // Phase (registration/ongoing/completed) is computed from dates, not
+        // a stored column, so this filter runs in PHP after loading.
+        if (in_array($status, ['registration', 'ongoing', 'completed'], true)) {
+            $posts = array_values(array_filter($posts, fn($p) => $p->competition->phaseKey() === $status));
+        }
 
         return $this->render('index', [
             'posts' => $posts,
             'view' => $view,
             'entrantCounts' => $this->buildEntrantCounts($posts),
+            'q' => $q, 'type' => $type, 'reward' => $reward, 'status' => $status, 'sort' => $sort, 'order' => $order,
         ]);
     }
 
@@ -72,14 +92,51 @@ class CompetitionController extends Controller
 
         $joined = empty($joinedIds) ? [] : Post::find()->where(['id' => $joinedIds])->all();
 
+        // Rank on the leaderboard for each joined competition — as an
+        // individual if registered that way, or via whichever of my teams
+        // is registered for it (there's only ever one, per-competition,
+        // thanks to the conflict check at registration time).
+        $ranks = [];
+        foreach ($joined as $post) {
+            $competition = $post->competition;
+            if (in_array($post->id, $registeredIds)) {
+                $ranks[$post->id] = \app\components\LeaderboardService::rankFor($post->id, $competition, 'individual', $userId);
+            } elseif (!empty($myTeamIds)) {
+                $myReg = \app\models\TeamCompetitionRegistration::find()
+                    ->where(['competition_id' => $post->id])->andWhere(['in', 'team_id', $myTeamIds])->one();
+                if ($myReg !== null) {
+                    $ranks[$post->id] = \app\components\LeaderboardService::rankFor($post->id, $competition, 'team', $myReg->team_id);
+                }
+            }
+        }
+
         return $this->render('mine', [
             'created' => $created,
             'joined' => $joined,
             'entrantCounts' => $this->buildEntrantCounts(array_merge($created, $joined)),
+            'ranks' => $ranks,
         ]);
     }
 
     /** Dataset info + download — only visible once registered (individual or via a registered team). */
+    /** Streams the competition's attached dataset through PHP, rather than a raw static-file link — sidesteps any IIS-level file-extension restrictions on the uploads folder. */
+    public function actionDownloadDataset(int $id)
+    {
+        $post = $this->findPost($id);
+        $competition = $post->competition;
+
+        if (empty($competition->dataset_file_path)) {
+            throw new NotFoundHttpException('No dataset file for this competition.');
+        }
+
+        $fullPath = Yii::getAlias('@webroot') . $competition->dataset_file_path;
+        if (!file_exists($fullPath)) {
+            throw new NotFoundHttpException('Dataset file is missing on the server.');
+        }
+
+        return Yii::$app->response->sendFile($fullPath);
+    }
+
     public function actionDataset(int $id)
     {
         $post = $this->findPost($id);
@@ -130,9 +187,17 @@ class CompetitionController extends Controller
      */
     public function actionRegisterTeam(int $id)
     {
+        if ($blocked = $this->blockRestrictedStudent()) return $blocked;
+
         $post = $this->findPost($id);
         $competition = $post->competition;
         $userId = Yii::$app->user->id;
+
+        if (!$competition->isRegistrationOpen()) {
+            $reason = $competition->hasEnded() ? 'This competition has ended.' : "Registration closed on {$competition->registration_deadline}.";
+            Yii::$app->session->setFlash('error', $reason);
+            return $this->redirect(['view', 'id' => $id]);
+        }
 
         $ownedTeamIds = Team::find()->select('id')->where(['owner_id' => $userId])->column();
 
@@ -254,7 +319,7 @@ class CompetitionController extends Controller
             'isRegistered' => $isRegistered,
             'myRegisteredTeam' => $myRegisteredTeam,
             'datasetSummary' => $this->datasetSummary($post->competition->dataset_file_path, $post->competition),
-            'leaderboardTop' => $this->buildLeaderboard($post->id, $post->competition, 5),
+            'leaderboardTop' => \app\components\LeaderboardService::build($post->id, $post->competition, 5),
             'submissionsRemainingToday' => $submissionsRemainingToday,
         ]);
     }
@@ -262,11 +327,19 @@ class CompetitionController extends Controller
     /** Register as an individual for a competition that accepts individuals. */
     public function actionRegister(int $id)
     {
+        if ($blocked = $this->blockRestrictedStudent()) return $blocked;
+
         $post = $this->findPost($id);
         $competition = $post->competition;
 
         if ($competition->accepts === 'team') {
             Yii::$app->session->setFlash('error', 'This competition only accepts team entries.');
+            return $this->redirect(['view', 'id' => $id]);
+        }
+
+        if (!$competition->isRegistrationOpen()) {
+            $reason = $competition->hasEnded() ? 'This competition has ended.' : "Registration closed on {$competition->registration_deadline}.";
+            Yii::$app->session->setFlash('error', $reason);
             return $this->redirect(['view', 'id' => $id]);
         }
 
@@ -292,6 +365,8 @@ class CompetitionController extends Controller
 
     public function actionCreate()
     {
+        if ($blocked = $this->blockRestrictedStudent()) return $blocked;
+
         // if (!Yii::$app->user->can('createCompetition')) {
         //     throw new ForbiddenHttpException('You do not have permission to create a competition.');
         // }
@@ -549,10 +624,28 @@ class CompetitionController extends Controller
             return $this->redirect(['view', 'id' => $id]);
         }
 
+        if (!$competition->isSubmissionOpen()) {
+            if ($competition->hasEnded()) {
+                Yii::$app->session->setFlash('error', 'This competition has ended — submissions are closed.');
+            } else {
+                Yii::$app->session->setFlash('error', "Submissions open once registration closes on {$competition->registration_deadline}.");
+            }
+            return $this->redirect(['view', 'id' => $id]);
+        }
+
         // Determine participant identity: individual registration or a registered team.
+        // Once registration_deadline has passed, team eligibility uses the FROZEN
+        // roster (who was consented as of that moment) — someone added to the
+        // team afterward doesn't gain submit rights for this competition.
+        $freezeTimestamp = $competition->registrationDeadlinePassed() ? strtotime($competition->registration_deadline) : null;
+
         $isIndividual = \app\models\CompetitionRegistration::isRegistered($id, $userId);
-        $myTeamIds = \app\models\TeamMembership::find()
-            ->select('team_id')->where(['user_id' => $userId, 'invite_status' => 'consented'])->column();
+        $myTeamIdsQuery = \app\models\TeamMembership::find()
+            ->select('team_id')->where(['user_id' => $userId, 'invite_status' => 'consented']);
+        if ($freezeTimestamp !== null) {
+            $myTeamIdsQuery->andWhere(['<=', 'responded_at', $freezeTimestamp]);
+        }
+        $myTeamIds = $myTeamIdsQuery->column();
         $myTeamReg = empty($myTeamIds) ? null : \app\models\TeamCompetitionRegistration::find()
             ->where(['competition_id' => $id])->andWhere(['in', 'team_id', $myTeamIds])->one();
 
@@ -669,36 +762,16 @@ class CompetitionController extends Controller
         $post = $this->findPost($id);
         $competition = $post->competition;
 
-        $rows = $this->buildLeaderboard($id, $competition, null);
+        $rows = \app\components\LeaderboardService::build($id, $competition, null);
 
         return $this->render('leaderboard', ['post' => $post, 'competition' => $competition, 'rows' => $rows]);
     }
 
-    /** Best score per participant (individual or team), sorted per the metric's direction. limit=null for full list. */
-    private function buildLeaderboard(int $competitionId, Competition $competition, ?int $limit): array
+    /** Chooser page — add a dataset or notebook, pre-linked to this competition/hackathon. */
+    public function actionContribute(int $id)
     {
-        $submissions = \app\models\Submission::find()->where(['competition_id' => $competitionId])->all();
-
-        $best = []; // key: "individual:userId" or "team:teamId" => Submission
-        foreach ($submissions as $s) {
-            $key = $s->participant_type . ':' . ($s->participant_type === 'team' ? $s->team_id : $s->user_id);
-            if (!isset($best[$key])) {
-                $best[$key] = $s;
-                continue;
-            }
-            $better = $competition->metric === 'rmse' ? $s->score < $best[$key]->score : $s->score > $best[$key]->score;
-            if ($better || ($s->score == $best[$key]->score && $s->submitted_at < $best[$key]->submitted_at)) {
-                $best[$key] = $s;
-            }
-        }
-
-        $rows = array_values($best);
-        usort($rows, function ($a, $b) use ($competition) {
-            if ($a->score == $b->score) return $a->submitted_at <=> $b->submitted_at; // earlier submission wins ties
-            return $competition->metric === 'rmse' ? $a->score <=> $b->score : $b->score <=> $a->score;
-        });
-
-        return $limit !== null ? array_slice($rows, 0, $limit) : $rows;
+        $post = $this->findPost($id);
+        return $this->render('contribute', ['post' => $post]);
     }
 
     private function findPost(int $id): Post
@@ -708,6 +781,16 @@ class CompetitionController extends Controller
             throw new NotFoundHttpException('Competition not found.');
         }
         return $post;
+    }
+
+    /** Blocks unverified students from creating/joining. Returns a redirect response if blocked, null otherwise. */
+    private function blockRestrictedStudent()
+    {
+        if (Yii::$app->user->identity->isRestrictedStudent()) {
+            Yii::$app->session->setFlash('error', 'Verify your student ID on your Profile before creating or joining anything.');
+            return $this->redirect(['/user/profile']);
+        }
+        return null;
     }
 
     private function slugify(string $text): string

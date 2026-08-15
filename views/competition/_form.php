@@ -170,15 +170,18 @@ $inputStyle = "width: 100%; background: var(--panel-glass-strong); border: 1px s
             </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 10px;">
             <div>
                 <label style="<?= $labelStyle ?>">Registration deadline (optional)</label>
                 <input type="datetime-local" name="Competition[registration_deadline]" value="<?= Html::encode($competition->registration_deadline) ?>" style="<?= $inputStyle ?>">
             </div>
             <div>
-                <label style="<?= $labelStyle ?>">Submission deadline</label>
-                <input type="datetime-local" name="Competition[deadline]" value="<?= Html::encode($competition->deadline) ?>" required style="<?= $inputStyle ?>">
+                <label style="<?= $labelStyle ?>">Final deadline (optional — blank means no deadline)</label>
+                <input type="datetime-local" name="Competition[deadline]" value="<?= Html::encode($competition->deadline) ?>" style="<?= $inputStyle ?>">
             </div>
+        </div>
+        <div style="font-size: 11px; color: var(--text-faint); margin-bottom: 24px;">
+            Setting a registration deadline switches to sequential mode: register beforehand, submissions open only once it passes. Leave it blank to let people register and submit at any time.
         </div>
     </div>
 

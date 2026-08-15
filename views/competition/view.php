@@ -20,27 +20,36 @@ $hasDatasetAccess = $hasAnyRegistration || $canManage;
     <div>
         <div class="eyebrow"><?= ucfirst($post->type) ?><?= $post->status !== 'published' ? ' · ' . ucfirst($post->status) : '' ?></div>
         <h1 class="page-title"><?= Html::encode($post->title) ?></h1>
-        <div class="page-sub">deadline <?= date('Y-m-d H:i', strtotime($competition->deadline)) ?></div>
+        <div class="page-sub">deadline <?= Html::encode($competition->deadlineLabel()) ?> · <?= Html::encode($competition->phaseLabel()) ?></div>
     </div>
-    <?php if ($canManage): ?>
-        <div style="display: flex; gap: 10px;">
+    <div style="display: flex; gap: 10px;">
+        <?php if (!Yii::$app->user->isGuest): ?>
+            <?= Html::a('Contribute', ['contribute', 'id' => $post->id], ['class' => 'nav-item', 'style' => 'display:inline-flex; padding: 9px 16px;']) ?>
+        <?php endif; ?>
+        <?php if ($canManage): ?>
             <?= Html::a('Edit', ['update', 'id' => $post->id], ['class' => 'nav-item', 'style' => 'display:inline-flex; padding: 9px 16px;']) ?>
             <?= Html::a('Delete', ['delete', 'id' => $post->id], [
                 'class' => 'nav-item', 'style' => 'display:inline-flex; padding: 9px 16px; color: var(--rose);',
                 'data' => ['method' => 'post', 'confirm' => 'Delete this competition and everything tied to it? This cannot be undone.'],
             ]) ?>
-        </div>
-    <?php endif; ?>
+        <?php endif; ?>
+    </div>
 </div>
 
 <?php if ($post->status === 'published' && ($hasAnyRegistration || $canManage || (!$hasAnyRegistration && $competition->accepts !== 'individual'))): ?>
 <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
     <div style="display: flex; gap: 10px;">
         <?php if ($hasAnyRegistration): ?>
-            <button type="button" class="nav-item active" style="display: inline-flex; padding: 9px 20px; border: 1px solid var(--border-strong); cursor: pointer;"
-                    onclick="document.getElementById('submit-modal').classList.add('open')">
-                Submit Prediction
-            </button>
+            <?php if ($competition->isSubmissionOpen()): ?>
+                <button type="button" class="nav-item active" style="display: inline-flex; padding: 9px 20px; border: 1px solid var(--border-strong); cursor: pointer;"
+                        onclick="document.getElementById('submit-modal').classList.add('open')">
+                    Submit Prediction
+                </button>
+            <?php elseif (!$competition->hasEnded()): ?>
+                <span class="nav-item" style="display: inline-flex; padding: 9px 20px; color: var(--text-faint); cursor: default; border-style: dashed;">
+                    Submissions open <?= date('M j, Y', strtotime($competition->registration_deadline)) ?>
+                </span>
+            <?php endif; ?>
             <?= Html::a('My Submissions', ['my-submissions', 'id' => $post->id], ['class' => 'nav-item', 'style' => 'display:inline-flex; padding: 9px 16px;']) ?>
         <?php endif; ?>
         <?php if ($canManage): ?>
@@ -48,7 +57,7 @@ $hasDatasetAccess = $hasAnyRegistration || $canManage;
         <?php endif; ?>
     </div>
 
-    <?php if (!$hasAnyRegistration && $competition->accepts !== 'individual'): ?>
+    <?php if (!$hasAnyRegistration && $competition->accepts !== 'individual' && $competition->isRegistrationOpen()): ?>
         <div style="display: flex; gap: 10px;">
             <?= Html::a('+ Create a Team', ['/team/create'], ['class' => 'nav-item', 'style' => 'display: inline-flex; padding: 9px 20px;']) ?>
             <?= Html::a('Browse Teams', ['teams', 'id' => $post->id], ['class' => 'nav-item', 'style' => 'display: inline-flex; padding: 9px 20px;']) ?>
@@ -66,10 +75,16 @@ $hasDatasetAccess = $hasAnyRegistration || $canManage;
 
 <?php if (!Yii::$app->user->isGuest && $post->status === 'published'): ?>
 <div class="panel" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+    <?php if (!$competition->isRegistrationOpen() && !$hasAnyRegistration): ?>
+        <span class="comp-tag" style="color: var(--text-faint);">
+            <?= $competition->hasEnded() ? 'Competition ended' : "Registration closed — reopens for submissions" ?>
+        </span>
+    <?php endif; ?>
+
     <?php if ($competition->accepts !== 'team'): ?>
         <?php if ($isRegistered): ?>
             <span class="comp-tag" style="background: linear-gradient(90deg, rgba(212,175,106,0.22), rgba(212,175,106,0.06)); border: 1px solid var(--border-strong); color: var(--gold-bright); font-weight: 700;">✓ Registered as Individual</span>
-        <?php elseif (!$hasAnyRegistration): ?>
+        <?php elseif (!$hasAnyRegistration && $competition->isRegistrationOpen()): ?>
             <?= Html::a('Register as Individual', ['register', 'id' => $post->id], [
                 'class' => 'nav-item active', 'style' => 'display: inline-flex; padding: 9px 20px;',
                 'data' => ['method' => 'post'],
@@ -81,7 +96,7 @@ $hasDatasetAccess = $hasAnyRegistration || $canManage;
         <?php if ($myRegisteredTeam !== null): ?>
             <span class="comp-tag" style="background: linear-gradient(90deg, rgba(212,175,106,0.22), rgba(212,175,106,0.06)); border: 1px solid var(--border-strong); color: var(--gold-bright); font-weight: 700;">✓ Registered — Team <?= Html::encode($myRegisteredTeam->name) ?></span>
             <?= Html::a('Manage Team', ['/team/manage', 'id' => $myRegisteredTeam->id], ['class' => 'nav-item', 'style' => 'display: inline-flex; padding: 9px 20px;']) ?>
-        <?php elseif (!$hasAnyRegistration): ?>
+        <?php elseif (!$hasAnyRegistration && $competition->isRegistrationOpen()): ?>
             <?= Html::a('Register a Team', ['register-team', 'id' => $post->id], ['class' => 'nav-item active', 'style' => 'display: inline-flex; padding: 9px 20px;']) ?>
         <?php endif; ?>
     <?php endif; ?>
@@ -153,7 +168,7 @@ $hasDatasetAccess = $hasAnyRegistration || $canManage;
                 <?php if ($hasDatasetAccess): ?>
                     <div style="display: flex; gap: 10px; margin-top: 14px;">
                         <?= Html::a('View Dataset', ['dataset', 'id' => $post->id], ['class' => 'nav-item', 'style' => 'display: inline-flex; padding: 9px 16px; flex: 1; justify-content: center;', 'target' => '_blank']) ?>
-                        <?= Html::a('Download', $competition->dataset_file_path, ['class' => 'nav-item active', 'style' => 'display: inline-flex; padding: 9px 16px; flex: 1; justify-content: center;', 'download' => true]) ?>
+                        <?= Html::a('Download', ['download-dataset', 'id' => $post->id], ['class' => 'nav-item active', 'style' => 'display: inline-flex; padding: 9px 16px; flex: 1; justify-content: center;']) ?>
                     </div>
                 <?php else: ?>
                     <p style="color: var(--text-faint); font-size: 11.5px; margin-top: 10px;">Register for this competition to view or download the full dataset.</p>
@@ -175,7 +190,7 @@ $hasDatasetAccess = $hasAnyRegistration || $canManage;
 
         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border);">
             <?php if ($post->cover_image_path): ?>
-                <div style="width: 40px; height: 40px; border-radius: 8px; background: url('<?= Html::encode($post->cover_image_path) ?>') center/cover; flex-shrink: 0;"></div>
+                <div style="width: 40px; height: 40px; border-radius: 8px; background: url('<?= Html::encode(\yii\helpers\Url::to(['/site/serve-image', 'path' => $post->cover_image_path])) ?>') center/cover; flex-shrink: 0;"></div>
             <?php else: ?>
                 <div class="comp-icon" style="width: 40px; height: 40px;"><?= $post->type === 'hackathon' ? '⚡' : '🏆' ?></div>
             <?php endif; ?>

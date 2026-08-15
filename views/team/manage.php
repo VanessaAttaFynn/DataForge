@@ -43,7 +43,7 @@ $memberCount = $team->getConsentedMemberCount();
         <div style="width: 60px; height: 60px; border-radius: 50%; background: #14110A; border: 3px solid rgba(255,255,255,0.5);
                     display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;">
             <?php if ($team->avatar_path): ?>
-                <img src="<?= Html::encode($team->avatar_path) ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                <img src="<?= Html::encode(\yii\helpers\Url::to(['/site/serve-image', 'path' => $team->avatar_path])) ?>" style="width: 100%; height: 100%; object-fit: cover;">
             <?php else: ?>
                 <span style="color: var(--gold-bright); font-family: 'Fraunces', serif; font-size: 22px; font-weight: 700;"><?= Html::encode(mb_substr($team->name, 0, 1)) ?></span>
             <?php endif; ?>
@@ -83,7 +83,7 @@ $memberCount = $team->getConsentedMemberCount();
         <div><div class="stat-num" style="font-size: 20px;"><?= $stats['top_10_count'] ?></div><div class="stat-label">Top 10 Finishes</div></div>
     </div>
 </div>
-<div style="font-size: 11px; color: var(--text-faint); margin: -8px 0 20px 4px;">Win / top-10 counts populate once the leaderboard scoring is live — entry counts are already real.</div>
+<div style="font-size: 11px; color: var(--text-faint); margin: -8px 0 20px 4px;">Win / top-10 counts are based on final rank once a competition has ended.</div>
 
 <?php if ($isOwner): ?>
 <div class="panel">

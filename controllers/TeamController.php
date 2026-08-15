@@ -34,6 +34,8 @@ class TeamController extends Controller
     /** Plain, generic team creation — no competition context at all. */
     public function actionCreate()
     {
+        if ($blocked = $this->blockRestrictedStudent()) return $blocked;
+
         $team = new Team();
 
         if (Yii::$app->request->isPost) {
@@ -107,16 +109,39 @@ class TeamController extends Controller
                 ->all();
         }
 
-        // Stats: real counts where we have real data, honest zeros where we
-        // don't yet (leaderboard/ranking logic isn't built, so "won" /
-        // "top 10" can't be computed truthfully — wiring is ready for when it is).
+        // Wins/top-10 are computed from the real leaderboard, but only for
+        // competitions that have actually ended — a live rank isn't a "win" yet.
         $registrations = $team->registrations;
+        $challengesWon = 0;
+        $hackathonsWon = 0;
+        $top10Count = 0;
+
+        foreach ($registrations as $reg) {
+            $competitionPost = $reg->competitionPost;
+            $competition = $competitionPost->competition;
+            if (!$competition->hasEnded()) {
+                continue;
+            }
+
+            $rank = \app\components\LeaderboardService::rankFor($competitionPost->id, $competition, 'team', $team->id);
+            if ($rank === null) {
+                continue;
+            }
+
+            if ($rank === 1) {
+                $competitionPost->type === 'hackathon' ? $hackathonsWon++ : $challengesWon++;
+            }
+            if ($rank <= 10) {
+                $top10Count++;
+            }
+        }
+
         $stats = [
             'challenges_participated' => count(array_filter($registrations, fn($r) => $r->competitionPost->type === 'competition')),
-            'challenges_won' => 0,
+            'challenges_won' => $challengesWon,
             'hackathons_participated' => count(array_filter($registrations, fn($r) => $r->competitionPost->type === 'hackathon')),
-            'hackathons_won' => 0,
-            'top_10_count' => 0,
+            'hackathons_won' => $hackathonsWon,
+            'top_10_count' => $top10Count,
         ];
 
         return $this->render('manage', [
@@ -187,6 +212,8 @@ class TeamController extends Controller
     /** Someone not on the team asks to join — optionally with a note (e.g. "just for this competition"). */
     public function actionRequestJoin(int $id, string $note = '', ?int $competitionId = null)
     {
+        if ($blocked = $this->blockRestrictedStudent()) return $blocked;
+
         $team = $this->findTeam($id);
         $userId = Yii::$app->user->id;
 
@@ -305,6 +332,8 @@ class TeamController extends Controller
 
     public function actionAcceptInvite(int $membershipId)
     {
+        if ($blocked = $this->blockRestrictedStudent()) return $blocked;
+
         $membership = TeamMembership::findOne($membershipId);
         if ($membership === null || (int) $membership->user_id !== (int) Yii::$app->user->id) {
             throw new ForbiddenHttpException('Not your invite.');
@@ -361,6 +390,16 @@ class TeamController extends Controller
         return $competitionId !== null
             ? ['/competition/teams', 'id' => $competitionId]
             : ['manage', 'id' => $teamId];
+    }
+
+    /** Blocks unverified students from creating/joining. Returns a redirect response if blocked, null otherwise. */
+    private function blockRestrictedStudent()
+    {
+        if (Yii::$app->user->identity->isRestrictedStudent()) {
+            Yii::$app->session->setFlash('error', 'Verify your student ID on your Profile before creating or joining anything.');
+            return $this->redirect(['/user/profile']);
+        }
+        return null;
     }
 
     private function findTeam(int $id): Team

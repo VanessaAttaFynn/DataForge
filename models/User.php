@@ -27,6 +27,11 @@ class User extends ActiveRecord implements IdentityInterface
     const DOMAIN_STAFF = 'ug.edu.gh';
     const DOMAIN_STUDENT = 'st.ug.edu.gh';
 
+    const STUDENT_VERIFICATION_NONE = 'none';
+    const STUDENT_VERIFICATION_PENDING = 'pending';
+    const STUDENT_VERIFICATION_APPROVED = 'approved';
+    const STUDENT_VERIFICATION_REJECTED = 'rejected';
+
     public static function tableName()
     {
         return '{{%user}}';
@@ -46,6 +51,10 @@ class User extends ActiveRecord implements IdentityInterface
             [['email'], 'email'],
             [['email'], 'validateUniversityEmail'],
             [['status'], 'integer'],
+            [['student_id'], 'string', 'max' => 50],
+            [['proof_document_path'], 'string', 'max' => 255],
+            [['student_verification_status'], 'string', 'max' => 20],
+            [['student_verification_note'], 'string'],
         ];
     }
 
@@ -64,6 +73,22 @@ class User extends ActiveRecord implements IdentityInterface
     {
         $domain = substr(strrchr(strtolower($this->email), '@'), 1);
         return $domain === self::DOMAIN_STUDENT;
+    }
+
+    public function isEmailVerified(): bool
+    {
+        return $this->status === self::STATUS_ACTIVE;
+    }
+
+    public function isStudentVerified(): bool
+    {
+        return $this->student_verification_status === self::STUDENT_VERIFICATION_APPROVED;
+    }
+
+    /** A student email account that hasn't passed verification yet — staff accounts are never restricted. */
+    public function isRestrictedStudent(): bool
+    {
+        return $this->isStudentEmail() && !$this->isStudentVerified();
     }
 
     // ---------- IdentityInterface ----------

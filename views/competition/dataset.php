@@ -44,10 +44,9 @@ $this->title = $post->title . ' — Dataset';
                     <div class="team-chip" style="justify-content: space-between;"><span>License</span><strong><?= Html::encode($summary['license']) ?></strong></div>
                 <?php endif; ?>
 
-                <?= Html::a('⬇ Download Dataset', $competition->dataset_file_path, [
+                <?= Html::a('⬇ Download Dataset', ['download-dataset', 'id' => $post->id], [
                     'class' => 'nav-item active',
                     'style' => 'display: flex; justify-content: center; padding: 10px 24px; margin-top: 16px;',
-                    'download' => true,
                 ]) ?>
             <?php else: ?>
                 <p style="color: var(--text-faint); font-size: 12.5px;">Nothing to show yet.</p>

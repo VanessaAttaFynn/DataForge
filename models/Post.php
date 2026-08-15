@@ -54,7 +54,8 @@ class Post extends ActiveRecord
         return [
             [['type', 'title', 'slug', 'author_id'], 'required'],
             [['body'], 'string'],
-            [['author_id', 'verified'], 'integer'],
+            [['author_id'], 'integer'],
+            [['verified'], 'boolean'], // integer validator breaks on SQL Server's native PHP bool false -> "" cast
             [['type', 'status'], 'string', 'max' => 20],
             [['title', 'slug', 'cover_image_path'], 'string', 'max' => 255],
             ['type', 'in', 'range' => [
@@ -86,6 +87,11 @@ class Post extends ActiveRecord
     public function getDataset()
     {
         return $this->hasOne(Dataset::class, ['post_id' => 'id']);
+    }
+
+    public function getNotebook()
+    {
+        return $this->hasOne(Notebook::class, ['post_id' => 'id']);
     }
 
     /**
@@ -130,6 +136,12 @@ class Post extends ActiveRecord
         $transaction = self::getDb()->beginTransaction();
         try {
             $this->status = $newStatus;
+            // A dataset/notebook that went through the approval process
+            // becomes verified once approved — that's the whole point of
+            // choosing to submit it for review instead of publishing unverified.
+            if (in_array($this->type, [self::TYPE_DATASET, self::TYPE_NOTEBOOK], true) && $newStatus === self::STATUS_PUBLISHED) {
+                $this->verified = true;
+            }
             if (!$this->save(false)) {
                 throw new \RuntimeException('Failed to save post status.');
             }

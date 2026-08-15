@@ -3,7 +3,6 @@
 namespace app\models;
 
 use yii\db\ActiveRecord;
-use app\models\TeamCompetitionRegistration;
 
 class Team extends ActiveRecord
 {
@@ -47,6 +46,26 @@ class Team extends ActiveRecord
     public function getConsentedMemberCount(): int
     {
         return (int) $this->getMemberships()->count();
+    }
+
+    /**
+     * Frozen roster as of a point in time — used once a competition's
+     * registration_deadline has passed, so the team can keep growing
+     * for other purposes without changing who counts toward that
+     * specific competition. $timestamp === null means "live", no freeze.
+     */
+    public function consentedMembershipsAsOf(?int $timestamp): array
+    {
+        $query = $this->getMemberships();
+        if ($timestamp !== null) {
+            $query->andWhere(['<=', 'responded_at', $timestamp]);
+        }
+        return $query->all();
+    }
+
+    public function consentedMemberCountAsOf(?int $timestamp): int
+    {
+        return count($this->consentedMembershipsAsOf($timestamp));
     }
 
     /** Generic capacity check (against the team's own cap, not any competition's). */

@@ -11,7 +11,7 @@ $this->title = 'Log In';
 <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;">
     <div class="panel" style="max-width: 400px; width: 100%;">
         <div style="text-align: center; margin-bottom: 26px;">
-            <div class="brand-mark" style="margin: 0 auto 12px; width: 44px; height: 44px; font-size: 20px;">DF</div>
+            <div class="brand-mark" style="margin: 0 auto 12px; width: 96px; height: 96px; background: none; border-radius: 0;"><img src="<?= Yii::$app->request->baseUrl ?>/images/logo.png" alt="DataForge" style="width: 100%; height: 100%; object-fit: contain;"></div>
             <div class="brand-name" style="font-size: 22px;">DataForge</div>
             <div class="brand-sub">University of Ghana</div>
         </div>

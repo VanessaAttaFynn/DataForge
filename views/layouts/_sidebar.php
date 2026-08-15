@@ -15,9 +15,11 @@ function navActive($routes, $route)
 ?>
 <aside class="sidebar">
     <div class="brand">
-        <div class="brand-mark">DF</div>
+        <div class="brand-mark" style="width: 52px; height: 52px; background: none; border-radius: 0; flex-shrink: 0;">
+            <img src="<?= Yii::$app->request->baseUrl ?>/images/logo.png" alt="DataForge" style="width: 100%; height: 100%; object-fit: contain;">
+        </div>
         <div>
-            <div class="brand-name">DataForge</div>
+            <div class="brand-name" style="font-size: 18px;">DataForge</div>
             <div class="brand-sub">University of Ghana</div>
         </div>
     </div>
@@ -27,7 +29,7 @@ function navActive($routes, $route)
         <?= Html::a(
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg> Dashboard',
             ['/site/dashboard'],
-            ['class' => 'nav-item' . navActive('site/dashboard', $route)]
+            ['class' => 'nav-item' . navActive('site/dashboard', $route), 'data' => ['tour' => 'dashboard']]
         ) ?>
     </nav>
 
@@ -36,62 +38,65 @@ function navActive($routes, $route)
         <?= Html::a(
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.66 3.58 3 8 3s8-1.34 8-3V6"/><path d="M4 12v6c0 1.66 3.58 3 8 3s8-1.34 8-3v-6"/></svg> Datasets',
             ['/dataset/index'],
-            ['class' => 'nav-item' . navActive('dataset/index', $route)]
+            ['class' => 'nav-item' . navActive('dataset/index', $route), 'data' => ['tour' => 'datasets']]
         ) ?>
         <?= Html::a(
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 2h6l1 4H8l1-4Z"/><path d="M6 6h12l1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L6 6Z"/><path d="M9 11h6M9 15h4"/></svg> Notebooks',
             ['/notebook/index'],
-            ['class' => 'nav-item' . navActive('notebook/index', $route)]
+            ['class' => 'nav-item' . navActive('notebook/index', $route), 'data' => ['tour' => 'notebooks']]
         ) ?>
         <?= Html::a(
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h12v4a6 6 0 0 1-12 0V3Z"/><path d="M6 5H3v2a3 3 0 0 0 3 3M18 5h3v2a3 3 0 0 1-3 3"/><path d="M12 13v4M8 21h8M9 17h6v2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2Z"/></svg> Competitions <span class="nav-badge">3</span>',
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h12v4a6 6 0 0 1-12 0V3Z"/><path d="M6 5H3v2a3 3 0 0 0 3 3M18 5h3v2a3 3 0 0 1-3 3"/><path d="M12 13v4M8 21h8M9 17h6v2a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2v-2Z"/></svg> Competitions',
             ['/competition/index'],
-            ['class' => 'nav-item' . navActive('competition/index', $route)]
-        ) ?>
-        <?= Html::a(
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg> Hackathons',
-            ['/hackathon/index'],
-            ['class' => 'nav-item' . navActive('hackathon/index', $route)]
-        ) ?>
-        <?= Html::a(
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg> Discussions',
-            ['/discussion/index'],
-            ['class' => 'nav-item' . navActive('discussion/index', $route)]
+            ['class' => 'nav-item' . navActive('competition/index', $route), 'data' => ['tour' => 'competitions']]
         ) ?>
     </nav>
 
     <nav class="nav-group">
         <div class="nav-label">My Space</div>
         <?= Html::a(
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 2l2 7M16 2l-2 7"/><circle cx="12" cy="15" r="6"/><path d="M12 12v2M10 16h4"/></svg> My Participation',
+            ['/competition/mine'],
+            ['class' => 'nav-item' . navActive('competition/mine', $route), 'data' => ['tour' => 'participation']]
+        ) ?>
+        <?= Html::a(
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6.5 6.5-6.5S15.5 16.4 15.5 20"/><circle cx="17.5" cy="9" r="2.8"/><path d="M21.5 20c0-2.8-1.9-5-4.5-5.7"/></svg> My Teams',
             ['/team/my'],
-            ['class' => 'nav-item' . navActive('team/my', $route)]
+            ['class' => 'nav-item' . navActive('team/my', $route), 'data' => ['tour' => 'teams']]
         ) ?>
         <?= Html::a(
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 21h8M12 17v4M5 4h14l-1 8a6 6 0 0 1-12 0L5 4Z"/><path d="M5 6H3a2 2 0 0 0 2 4M19 6h2a2 2 0 0 1-2 4"/></svg> Leaderboard',
-            ['/leaderboard/index'],
-            ['class' => 'nav-item' . navActive('leaderboard/index', $route)]
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg> My Datasets',
+            ['/dataset/mine'],
+            ['class' => 'nav-item' . navActive('dataset/mine', $route), 'data' => ['tour' => 'mydatasets']]
         ) ?>
         <?= Html::a(
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg> Profile',
-            ['/user/profile'],
-            ['class' => 'nav-item' . navActive('user/profile', $route)]
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h12v18l-6-4-6 4V3Z"/></svg> My Notebooks',
+            ['/notebook/mine'],
+            ['class' => 'nav-item' . navActive('notebook/mine', $route), 'data' => ['tour' => 'mynotebooks']]
         ) ?>
     </nav>
 
+    <?php $canModerate = !Yii::$app->user->isGuest && (Yii::$app->user->can('approveCompetition') || Yii::$app->user->can('verifyDataset')); ?>
+    <?php $canManageUsers = !Yii::$app->user->isGuest && Yii::$app->user->can('manageUsers'); ?>
+    <?php if ($canModerate || $canManageUsers): ?>
     <nav class="nav-group">
         <div class="nav-label">Admin</div>
+        <?php if ($canModerate): ?>
         <?= Html::a(
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 6 9 17l-5-5"/></svg> Approvals',
             ['/approval/index'],
             ['class' => 'nav-item' . navActive('approval/index', $route)]
         ) ?>
+        <?php endif; ?>
+        <?php if ($canManageUsers): ?>
         <?= Html::a(
             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="7" r="4"/><path d="M2 21c0-4 3-7 7-7s7 3 7 7"/><path d="M20 8v6M17 11h6"/></svg> Manage Users',
             ['/user/index'],
             ['class' => 'nav-item' . navActive('user/index', $route)]
         ) ?>
+        <?php endif; ?>
     </nav>
+    <?php endif; ?>
 
     <div class="sidebar-footer">
         <div class="theme-toggle">

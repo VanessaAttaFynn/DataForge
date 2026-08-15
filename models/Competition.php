@@ -44,10 +44,11 @@ class Competition extends ActiveRecord
     public function rules()
     {
         return [
-            [['post_id', 'metric', 'accepts', 'submission_cap_per_day', 'reward_type', 'deadline'], 'required'],
+            [['post_id', 'metric', 'accepts', 'submission_cap_per_day', 'reward_type'], 'required'],
             [['post_id', 'team_size_limit', 'submission_cap_per_day'], 'integer'],
             [['reward_details'], 'string'],
             [['registration_deadline', 'deadline'], 'safe'],
+            [['registration_deadline'], 'validateRegistrationBeforeDeadline'],
             [['metric'], 'in', 'range' => [self::METRIC_ACCURACY, self::METRIC_RMSE]],
             [['accepts'], 'in', 'range' => [self::ACCEPTS_INDIVIDUAL, self::ACCEPTS_TEAM, self::ACCEPTS_BOTH]],
             [['reward_type'], 'in', 'range' => [
@@ -73,5 +74,82 @@ class Competition extends ActiveRecord
     public function scoreSortDirection(): string
     {
         return $this->metric === self::METRIC_RMSE ? SORT_ASC : SORT_DESC;
+    }
+
+    // ---------- Lifecycle ----------
+    // registration_deadline being SET is what turns on sequential mode:
+    // register-then-submit, gated at that date. Left blank = fully
+    // concurrent, today's original behavior, all the way to the final deadline.
+
+    /** A competition with no final deadline never "ends" — stays open indefinitely. */
+    public function hasEnded(): bool
+    {
+        return !empty($this->deadline) && strtotime($this->deadline) <= time();
+    }
+
+    public function registrationDeadlinePassed(): bool
+    {
+        return !empty($this->registration_deadline) && strtotime($this->registration_deadline) <= time();
+    }
+
+    /** Individual registration / team creation-registration allowed. */
+    public function isRegistrationOpen(): bool
+    {
+        if ($this->hasEnded()) {
+            return false;
+        }
+        if (empty($this->registration_deadline)) {
+            return true; // no gate set — always open until the final deadline
+        }
+        return !$this->registrationDeadlinePassed();
+    }
+
+    /** Submissions allowed. */
+    public function isSubmissionOpen(): bool
+    {
+        if ($this->hasEnded()) {
+            return false;
+        }
+        if (empty($this->registration_deadline)) {
+            return true; // concurrent mode — no gate between registering and submitting
+        }
+        return $this->registrationDeadlinePassed(); // sequential mode — only after registration closes
+    }
+
+    /** For messaging on the competition page. */
+    /** Stable key for filtering — 'registration' / 'ongoing' / 'completed'. Use phaseLabel() for display text. */
+    public function phaseKey(): string
+    {
+        if ($this->hasEnded()) {
+            return 'completed';
+        }
+        if (!empty($this->registration_deadline) && !$this->registrationDeadlinePassed()) {
+            return 'registration';
+        }
+        return 'ongoing';
+    }
+
+    public function phaseLabel(): string
+    {
+        if ($this->hasEnded()) {
+            return 'Completed';
+        }
+        if (!empty($this->registration_deadline) && !$this->registrationDeadlinePassed()) {
+            return 'Registration open — submissions start ' . date('M j, Y', strtotime($this->registration_deadline));
+        }
+        return 'Ongoing';
+    }
+
+    public function deadlineLabel(): string
+    {
+        return empty($this->deadline) ? 'None' : date('Y-m-d H:i', strtotime($this->deadline));
+    }
+
+    public function validateRegistrationBeforeDeadline(): void
+    {
+        if (!empty($this->registration_deadline) && !empty($this->deadline)
+            && strtotime($this->registration_deadline) > strtotime($this->deadline)) {
+            $this->addError('registration_deadline', 'Registration deadline cannot be after the submission deadline.');
+        }
     }
 }

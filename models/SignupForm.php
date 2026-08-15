@@ -59,12 +59,13 @@ class SignupForm extends Model
         }
 
         // Domain decides the starting role: st.ug.edu.gh -> student.
-        // ug.edu.gh (staff) also starts as student — an admin promotes
-        // them to moderator manually via the permissions page.
+        // ug.edu.gh (staff) -> moderator automatically, since they're the
+        // ones who should be approving content — no manual promotion needed.
         $auth = Yii::$app->authManager;
-        $studentRole = $auth->getRole('student');
-        if ($studentRole !== null) {
-            $auth->assign($studentRole, $user->id);
+        $roleName = $user->isStudentEmail() ? 'student' : 'moderator';
+        $role = $auth->getRole($roleName);
+        if ($role !== null) {
+            $auth->assign($role, $user->id);
         }
 
         $this->sendVerificationEmail($user);
