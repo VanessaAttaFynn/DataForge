@@ -49,7 +49,8 @@ class User extends ActiveRecord implements IdentityInterface
             [['username', 'email'], 'unique'],
             [['username'], 'string', 'min' => 3, 'max' => 255],
             [['email'], 'email'],
-            [['email'], 'validateUniversityEmail'],
+            // TEMP: disabled for testing with a personal email. Uncomment to restore.
+            // [['email'], 'validateUniversityEmail'],
             [['status'], 'integer'],
             [['student_id'], 'string', 'max' => 50],
             [['proof_document_path'], 'string', 'max' => 255],

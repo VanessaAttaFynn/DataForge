@@ -29,6 +29,18 @@ $this->title = $this->title ? $this->title . ' — DataForge' : 'DataForge';
 </head>
 <body data-theme="dark">
 <?php $this->beginBody() ?>
+<header style="position: fixed; top: 0; left: 0; right: 0; display: flex; justify-content: flex-end; padding: 16px 20px; z-index: 10;">
+    <div class="theme-toggle" style="width: 170px;">
+        <button type="button" id="btn-dark" class="active" onclick="setTheme('dark')">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3a9 9 0 1 0 9 9c0-.4 0-.8-.1-1.2A7 7 0 0 1 12 3Z"/></svg>
+            Dark
+        </button>
+        <button type="button" id="btn-light" onclick="setTheme('light')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+            Light
+        </button>
+    </div>
+</header>
 <?= $content ?>
 <?php $this->endBody() ?>
 </body>

@@ -20,7 +20,8 @@ class SignupForm extends Model
             ['username', 'unique', 'targetClass' => User::class, 'message' => 'This username is already taken.'],
             ['email', 'email'],
             ['email', 'unique', 'targetClass' => User::class, 'message' => 'An account with this email already exists.'],
-            ['email', 'validateUniversityEmail'],
+            // TEMP: disabled for testing with a personal email. Uncomment to restore.
+            // ['email', 'validateUniversityEmail'],
             ['password', 'string', 'min' => 8],
             ['password_confirm', 'compare', 'compareAttribute' => 'password', 'message' => 'Passwords do not match.'],
         ];
@@ -77,11 +78,9 @@ class SignupForm extends Model
     {
         $verifyLink = Yii::$app->urlManager->createAbsoluteUrl(['site/verify-email', 'token' => $user->verification_token]);
 
-        // Requires a configured 'mailer' component in config/web.php.
-        // See config/mailer_config_snippet.php for SMTP setup.
         return Yii::$app->mailer->compose()
             ->setTo($user->email)
-            ->setFrom([Yii::$app->params['adminEmail'] ?? 'no-reply@dataforge.world' => 'DataForge'])
+            ->setFrom([Yii::$app->params['senderEmail'] => Yii::$app->params['senderName']])
             ->setSubject('Verify your DataForge account')
             ->setTextBody("Hi {$user->username},\n\nVerify your account by visiting this link:\n{$verifyLink}\n\nIf you didn't sign up, ignore this email.")
             ->send();

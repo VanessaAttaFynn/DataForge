@@ -1,7 +1,9 @@
 <?php
 
+$mail = require __DIR__ . '/mail-local.php';
+
 return [
     'adminEmail' => 'admin@example.com',
-    'senderEmail' => 'noreply@example.com',
-    'senderName' => 'Example.com mailer',
+    'senderEmail' => $mail['username'],
+    'senderName' => 'DataForge',
 ];

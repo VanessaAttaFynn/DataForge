@@ -18,23 +18,29 @@
   }
 
   [data-theme="light"] {
-    --bg: #F6F4EF;
-    --panel: #FFFFFF;
-    --panel-glass: rgba(255,255,255,0.55);
-    --panel-glass-strong: rgba(255,255,255,0.75);
-    --border: rgba(169,130,26,0.18);
-    --border-strong: rgba(169,130,26,0.4);
-    --gold: #A9821A;
-    --gold-bright: #8C6B14;
-    --gold-dim: #C9AC5F;
-    --text: #201D18;
-    --text-dim: #6B6558;
-    --text-faint: #A39C8C;
-    --emerald: #2F7A5F;
-    --rose: #9C4A43;
+    --bg: #FBF4E6;
+    --panel: #FFFDF8;
+    --panel-glass: rgba(255,253,248,0.72);
+    --panel-glass-strong: rgba(255,255,255,0.9);
+    --border: rgba(184,134,11,0.22);
+    --border-strong: rgba(184,134,11,0.5);
+    --gold: #B8860B;
+    --gold-bright: #8F6508;
+    --gold-dim: #E9C46A;
+    --text: #2A1F14;
+    --text-dim: #6E5E4A;
+    --text-faint: #A8957A;
+    --emerald: #1F9E83;
+    --rose: #D9534F;
+    --coral: #F07F5A;
+    --teal: #2BA6A0;
+    --violet: #8B6FD6;
+    --sky: #4A9FE0;
+    --blue: #2F6FD0;
+    --hot-purple: #C026D3;
     --navy: #1D3557;
     --navy-deep: #10233F;
-    --shadow: rgba(120,110,90,0.18);
+    --shadow: rgba(160,110,30,0.16);
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -50,14 +56,18 @@
       radial-gradient(ellipse 700px 500px at 100% 0%, rgba(74,155,127,0.05), transparent 60%);
     background-attachment: fixed;
   }
-  [data-theme="light"] body {
+  body[data-theme="light"] {
+    background-color: var(--bg);
     background-image:
-      radial-gradient(circle 500px at 8% 12%, rgba(29,53,87,0.18), rgba(29,53,87,0.08) 45%, transparent 78%),
-      radial-gradient(circle 460px at 88% 8%, rgba(126,200,227,0.26), rgba(126,200,227,0.11) 45%, transparent 78%),
-      radial-gradient(circle 480px at 18% 55%, rgba(126,200,227,0.20), rgba(126,200,227,0.09) 45%, transparent 78%),
-      radial-gradient(circle 520px at 78% 50%, rgba(29,53,87,0.16), rgba(29,53,87,0.07) 45%, transparent 78%),
-      radial-gradient(circle 470px at 35% 92%, rgba(126,200,227,0.19), rgba(126,200,227,0.08) 45%, transparent 78%),
-      radial-gradient(circle 440px at 95% 88%, rgba(29,53,87,0.17), rgba(29,53,87,0.07) 45%, transparent 78%);
+      radial-gradient(circle 520px at 6% 8%, rgba(233,196,106,0.45), transparent 70%),
+      radial-gradient(circle 460px at 94% 6%, rgba(240,127,90,0.22), transparent 70%),
+      radial-gradient(circle 500px at 90% 70%, rgba(43,166,160,0.18), transparent 70%),
+      radial-gradient(circle 520px at 12% 88%, rgba(47,111,208,0.38), transparent 70%),
+      radial-gradient(circle 460px at 60% 100%, rgba(74,159,224,0.32), transparent 70%),
+      radial-gradient(circle 420px at 70% 18%, rgba(74,159,224,0.28), transparent 70%),
+      radial-gradient(circle 440px at 100% 38%, rgba(192,38,211,0.26), transparent 70%),
+      radial-gradient(circle 360px at 38% 0%, rgba(192,38,211,0.16), transparent 70%),
+      radial-gradient(circle 380px at 50% 45%, rgba(255,255,255,0.6), transparent 70%);
     background-attachment: fixed;
   }
 
@@ -636,3 +646,375 @@
   color: #14110A;
   border: none;
 }
+
+/* =====================================================================
+   LIGHT MODE — warm honey base, gold as the lead colour, with coral,
+   teal, violet and sky as playful accents. Only affects light mode.
+   ===================================================================== */
+body[data-theme="light"] .panel,
+body[data-theme="light"] .stat-card,
+body[data-theme="light"] .dataset-card,
+body[data-theme="light"] .team-chip {
+  box-shadow: 0 1px 0 rgba(255,255,255,0.9) inset, 0 10px 30px -12px var(--shadow);
+}
+body[data-theme="light"] .panel { border-color: rgba(184,134,11,0.18); }
+
+/* Sidebar */
+body[data-theme="light"] .sidebar {
+  background: linear-gradient(180deg, rgba(255,250,238,0.85), rgba(255,244,222,0.75));
+  border-right-color: rgba(184,134,11,0.2);
+}
+
+/* Gold "pill" for active nav + primary buttons (login / sign-up use .nav-item.active) */
+body[data-theme="light"] .nav-item.active,
+body[data-theme="light"] .tour-btn-primary {
+  background: linear-gradient(135deg, #F2CF6B 0%, #E0A82E 55%, #C98A12 100%);
+  color: #2A1F14;
+  border: 1px solid rgba(160,110,10,0.45);
+  box-shadow: 0 6px 18px -6px rgba(201,138,18,0.55);
+}
+body[data-theme="light"] .nav-badge { background: var(--hot-purple); color: #fff; }
+body[data-theme="light"] .icon-badge { background: var(--hot-purple); }
+
+/* Theme toggle */
+body[data-theme="light"] .theme-toggle { background: rgba(255,255,255,0.85); }
+body[data-theme="light"] .theme-toggle button.active,
+body[data-theme="light"] .theme-toggle a.active {
+  background: linear-gradient(135deg, #F2CF6B, #E0A82E);
+  color: #2A1F14;
+  box-shadow: 0 3px 10px -3px rgba(201,138,18,0.6);
+}
+
+/* Headings: gold-to-coral eyebrow */
+body[data-theme="light"] .eyebrow {
+  background: linear-gradient(90deg, var(--gold), var(--hot-purple));
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent;
+}
+body[data-theme="light"] .brand-sub { color: var(--gold); }
+
+/* Stat cards: each gets its own accent colour */
+body[data-theme="light"] .stat-card { position: relative; overflow: hidden; }
+body[data-theme="light"] .stat-card::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 4px;
+  background: var(--accent, var(--gold));
+}
+body[data-theme="light"] .stat-card:nth-child(4n+1) { --accent: #E0A82E; background: linear-gradient(160deg, rgba(242,207,107,0.22), rgba(255,253,248,0.8) 60%); }
+body[data-theme="light"] .stat-card:nth-child(4n+2) { --accent: var(--coral); background: linear-gradient(160deg, rgba(240,127,90,0.16), rgba(255,253,248,0.8) 60%); }
+body[data-theme="light"] .stat-card:nth-child(4n+3) { --accent: var(--teal); background: linear-gradient(160deg, rgba(43,166,160,0.15), rgba(255,253,248,0.8) 60%); }
+body[data-theme="light"] .stat-card:nth-child(4n+4) { --accent: var(--blue); background: linear-gradient(160deg, rgba(47,111,208,0.28), rgba(255,253,248,0.8) 70%); }
+body[data-theme="light"] .stat-card .ring-fg { stroke: var(--accent, var(--gold)); }
+body[data-theme="light"] .ring-bg { stroke: rgba(184,134,11,0.12); }
+
+/* Competition icons and feed dots cycle through the accents */
+body[data-theme="light"] a:nth-of-type(4n+1) .comp-icon { background: linear-gradient(135deg, rgba(242,207,107,0.55), rgba(242,207,107,0.15)); }
+body[data-theme="light"] a:nth-of-type(4n+2) .comp-icon { background: linear-gradient(135deg, rgba(240,127,90,0.4), rgba(240,127,90,0.1)); }
+body[data-theme="light"] a:nth-of-type(4n+3) .comp-icon { background: linear-gradient(135deg, rgba(43,166,160,0.4), rgba(43,166,160,0.1)); }
+body[data-theme="light"] a:nth-of-type(4n+4) .comp-icon { background: linear-gradient(135deg, rgba(47,111,208,0.55), rgba(74,159,224,0.25)); }
+body[data-theme="light"] .feed-item:nth-child(4n+1) .feed-dot { background: #E0A82E; }
+body[data-theme="light"] .feed-item:nth-child(4n+2) .feed-dot { background: var(--coral); }
+body[data-theme="light"] .feed-item:nth-child(4n+3) .feed-dot { background: var(--teal); }
+body[data-theme="light"] .feed-item:nth-child(4n+4) .feed-dot { background: var(--blue); }
+
+/* Tags */
+body[data-theme="light"] .tag-live { background: rgba(31,158,131,0.14); color: #137A64; }
+body[data-theme="light"] .tag-closing { background: rgba(240,127,90,0.18); color: #C2502C; }
+body[data-theme="light"] .tag-new { background: rgba(192,38,211,0.14); color: #A21CAF; }
+body[data-theme="light"] .nb-tag { background: rgba(74,159,224,0.12); color: #2F7DBA; border-color: rgba(74,159,224,0.3); }
+
+/* Dataset cards: coloured top edge on hover */
+body[data-theme="light"] .dataset-card { border-top: 3px solid transparent; transition: border-color 0.2s ease, transform 0.2s ease; }
+body[data-theme="light"] .dataset-card:hover { border-top-color: var(--hot-purple); transform: translateY(-2px); }
+
+/* Avatars */
+body[data-theme="light"] .avatar { background: linear-gradient(135deg, #F2CF6B, var(--hot-purple)); color: #fff; border-color: #FFFDF8; text-shadow: 0 1px 2px rgba(0,0,0,0.25); }
+
+/* Inputs: gold focus glow */
+body[data-theme="light"] input:focus,
+body[data-theme="light"] textarea:focus,
+body[data-theme="light"] select:focus {
+  outline: none;
+  border-color: #E0A82E !important;
+  box-shadow: 0 0 0 3px rgba(242,207,107,0.35);
+}
+
+/* Links */
+body[data-theme="light"] .panel-link { color: var(--blue); }
+
+/* Code block stays dark but warmer */
+body[data-theme="light"] .nb-code pre { background: #2A2118; color: #F3E7CF; border-color: rgba(184,134,11,0.3); }
+body[data-theme="light"] .nb-output { background: rgba(233,196,106,0.08); }
+
+body[data-theme="light"] ::-webkit-scrollbar-thumb { background: linear-gradient(#F2CF6B, #E0A82E); }
+
+/* ---------- Navy (from the logo) ---------- */
+body[data-theme="light"] h1.page-title,
+body[data-theme="light"] .panel-title,
+body[data-theme="light"] .brand-name,
+body[data-theme="light"] .stat-info .stat-num,
+body[data-theme="light"] .stat-num { color: var(--navy); }
+
+body[data-theme="light"] .sidebar {
+  background: linear-gradient(180deg, #E4EDF8 0%, #EEF2F6 55%, #F8EEDB 100%);
+  border-right-color: rgba(29,53,87,0.14);
+}
+body[data-theme="light"] .nav-label { color: #5B7396; }
+body[data-theme="light"] .nav-item { color: #3A4F6E; }
+body[data-theme="light"] .nav-item.active { color: #2A1F14; }
+body[data-theme="light"] .brand { border-bottom-color: rgba(29,53,87,0.14); }
+body[data-theme="light"] .sidebar-footer { border-top-color: rgba(29,53,87,0.14); }
+
+/* ---------- Light-mode hovers ---------- */
+body[data-theme="light"] .nav-item,
+body[data-theme="light"] .comp-item,
+body[data-theme="light"] .stat-card,
+body[data-theme="light"] .team-chip,
+body[data-theme="light"] .icon-btn,
+body[data-theme="light"] .panel-link,
+body[data-theme="light"] .account-dropdown-link {
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease,
+              box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+/* Sidebar menu items + normal buttons: blue-to-purple wash */
+body[data-theme="light"] .nav-item:not(.active):hover {
+  background: linear-gradient(90deg, rgba(47,111,208,0.16), rgba(192,38,211,0.12));
+  color: var(--navy);
+  box-shadow: inset 0 0 0 1px rgba(47,111,208,0.25);
+}
+body[data-theme="light"] .sidebar .nav-item:not(.active):hover { transform: translateX(4px); }
+body[data-theme="light"] .nav-item:not(.active):hover svg { color: var(--blue); opacity: 1; }
+
+/* Gold buttons (Log In, Create, Filter, Next…): lift + warmer gold */
+body[data-theme="light"] .nav-item.active:hover,
+body[data-theme="light"] .tour-btn-primary:hover {
+  background: linear-gradient(135deg, #F7DC80 0%, #EBA628 50%, #D2780E 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px -8px rgba(210,120,14,0.65), 0 0 0 3px rgba(242,207,107,0.35);
+}
+body[data-theme="light"] .nav-item.active:active { transform: translateY(0); }
+body[data-theme="light"] .sidebar .nav-item.active:hover { transform: none; }
+
+/* Competition rows */
+body[data-theme="light"] .comp-item:hover {
+  background: #fff;
+  border-color: rgba(47,111,208,0.3);
+  transform: translateX(4px);
+  box-shadow: 0 8px 20px -10px rgba(47,111,208,0.4);
+}
+
+/* Stat cards: lift with a glow in their own colour */
+body[data-theme="light"] .stat-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--accent, var(--gold));
+  box-shadow: 0 14px 28px -12px var(--accent, var(--gold));
+}
+
+/* Dataset cards */
+body[data-theme="light"] .dataset-card:hover { box-shadow: 0 12px 24px -12px rgba(192,38,211,0.45); }
+
+/* Info rows / team chips */
+body[data-theme="light"] .team-chip:hover {
+  border-color: rgba(192,38,211,0.35);
+  background: linear-gradient(90deg, rgba(255,255,255,0.95), rgba(192,38,211,0.06));
+}
+
+/* Links like "View all →" */
+body[data-theme="light"] .panel-link:hover { color: var(--hot-purple); text-decoration: underline; text-underline-offset: 3px; }
+
+/* Bell + dropdown links */
+body[data-theme="light"] .icon-btn:hover { border-color: var(--blue); color: var(--blue); background: #fff; transform: translateY(-1px); }
+body[data-theme="light"] .account-trigger:hover { box-shadow: 0 0 0 3px rgba(192,38,211,0.3); }
+body[data-theme="light"] .account-dropdown-link:hover {
+  background: linear-gradient(90deg, rgba(47,111,208,0.12), rgba(192,38,211,0.08));
+  color: var(--navy);
+}
+
+/* Dark/Light switch and password eye */
+body[data-theme="light"] .theme-toggle button:not(.active):hover { color: var(--navy); background: rgba(47,111,208,0.1); }
+body[data-theme="light"] .toggle-password:hover { color: var(--gold) !important; }
+
+/* =====================================================================
+   DARK MODE — deep navy ink base, gold lead, with coral, teal, blue and
+   hot purple glowing accents. Mirrors the light-mode revamp.
+   ===================================================================== */
+body[data-theme="dark"] {
+  --bg: #0A0F1F;
+  --panel: #131A2E;
+  --panel-glass: rgba(255,255,255,0.045);
+  --panel-glass-strong: rgba(255,255,255,0.075);
+  --border: rgba(233,196,106,0.16);
+  --border-strong: rgba(233,196,106,0.42);
+  --gold: #E9C46A;
+  --gold-bright: #F5D98B;
+  --gold-dim: #9C7A2E;
+  --text: #F2EEE6;
+  --text-dim: #A3ADC2;
+  --text-faint: #66718A;
+  --emerald: #2DD4BF;
+  --rose: #FB7185;
+  --coral: #FF8A65;
+  --teal: #2DD4BF;
+  --blue: #60A5FA;
+  --hot-purple: #E056FD;
+  --navy: #9CC2FF;
+  --shadow: rgba(0,0,0,0.55);
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(circle 520px at 4% 6%, rgba(233,196,106,0.16), transparent 70%),
+    radial-gradient(circle 480px at 100% 30%, rgba(224,86,253,0.16), transparent 70%),
+    radial-gradient(circle 420px at 40% 0%, rgba(224,86,253,0.08), transparent 70%),
+    radial-gradient(circle 520px at 10% 92%, rgba(96,165,250,0.17), transparent 70%),
+    radial-gradient(circle 460px at 92% 96%, rgba(45,212,191,0.12), transparent 70%),
+    radial-gradient(circle 380px at 62% 70%, rgba(255,138,101,0.07), transparent 70%);
+  background-attachment: fixed;
+}
+
+body[data-theme="dark"] .panel,
+body[data-theme="dark"] .stat-card,
+body[data-theme="dark"] .dataset-card,
+body[data-theme="dark"] .team-chip {
+  box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 14px 34px -16px rgba(0,0,0,0.7);
+}
+
+/* Sidebar */
+body[data-theme="dark"] .sidebar {
+  background: linear-gradient(180deg, rgba(20,30,62,0.85) 0%, rgba(16,18,40,0.85) 60%, rgba(30,18,44,0.85) 100%);
+  border-right-color: rgba(96,165,250,0.14);
+}
+body[data-theme="dark"] .brand { border-bottom-color: rgba(96,165,250,0.14); }
+body[data-theme="dark"] .sidebar-footer { border-top-color: rgba(96,165,250,0.14); }
+body[data-theme="dark"] .nav-label { color: #7D8DB0; }
+body[data-theme="dark"] .nav-item { color: #B4BED3; }
+
+/* Gold pill: active nav + primary buttons */
+body[data-theme="dark"] .nav-item.active,
+body[data-theme="dark"] .tour-btn-primary {
+  background: linear-gradient(135deg, #F5D98B 0%, #E9B949 55%, #CF8F1A 100%);
+  color: #1A1308;
+  border: 1px solid rgba(245,217,139,0.6);
+  box-shadow: 0 8px 22px -8px rgba(233,185,73,0.6);
+}
+body[data-theme="dark"] .nav-item.active svg { color: #1A1308; }
+body[data-theme="dark"] .nav-badge,
+body[data-theme="dark"] .icon-badge { background: var(--hot-purple); color: #fff; }
+
+/* Theme toggle */
+body[data-theme="dark"] .theme-toggle { background: rgba(255,255,255,0.06); }
+body[data-theme="dark"] .theme-toggle button.active,
+body[data-theme="dark"] .theme-toggle a.active {
+  background: linear-gradient(135deg, #F5D98B, #E9B949);
+  color: #1A1308;
+  box-shadow: 0 3px 12px -3px rgba(233,185,73,0.6);
+}
+
+/* Headings */
+body[data-theme="dark"] .eyebrow {
+  background: linear-gradient(90deg, var(--gold), var(--hot-purple));
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent;
+}
+body[data-theme="dark"] .brand-sub { color: var(--gold); }
+body[data-theme="dark"] h1.page-title { color: #FFFFFF; }
+body[data-theme="dark"] .panel-title { color: #E6EEFF; }
+
+/* Stat cards: own accent colour each */
+body[data-theme="dark"] .stat-card { position: relative; overflow: hidden; }
+body[data-theme="dark"] .stat-card::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px;
+  background: var(--accent, var(--gold));
+  box-shadow: 0 0 14px var(--accent, var(--gold));
+}
+body[data-theme="dark"] .stat-card:nth-child(4n+1) { --accent: #E9C46A; background: linear-gradient(160deg, rgba(233,196,106,0.16), rgba(255,255,255,0.03) 65%); }
+body[data-theme="dark"] .stat-card:nth-child(4n+2) { --accent: var(--coral); background: linear-gradient(160deg, rgba(255,138,101,0.15), rgba(255,255,255,0.03) 65%); }
+body[data-theme="dark"] .stat-card:nth-child(4n+3) { --accent: var(--teal); background: linear-gradient(160deg, rgba(45,212,191,0.14), rgba(255,255,255,0.03) 65%); }
+body[data-theme="dark"] .stat-card:nth-child(4n+4) { --accent: var(--blue); background: linear-gradient(160deg, rgba(96,165,250,0.17), rgba(255,255,255,0.03) 65%); }
+body[data-theme="dark"] .stat-card .ring-fg { stroke: var(--accent, var(--gold)); }
+
+/* Competition icons + feed dots */
+body[data-theme="dark"] a:nth-of-type(4n+1) .comp-icon { background: linear-gradient(135deg, rgba(233,196,106,0.4), rgba(233,196,106,0.08)); border-color: rgba(233,196,106,0.3); }
+body[data-theme="dark"] a:nth-of-type(4n+2) .comp-icon { background: linear-gradient(135deg, rgba(255,138,101,0.38), rgba(255,138,101,0.08)); border-color: rgba(255,138,101,0.3); }
+body[data-theme="dark"] a:nth-of-type(4n+3) .comp-icon { background: linear-gradient(135deg, rgba(45,212,191,0.35), rgba(45,212,191,0.07)); border-color: rgba(45,212,191,0.3); }
+body[data-theme="dark"] a:nth-of-type(4n+4) .comp-icon { background: linear-gradient(135deg, rgba(96,165,250,0.4), rgba(96,165,250,0.08)); border-color: rgba(96,165,250,0.3); }
+body[data-theme="dark"] .feed-item:nth-child(4n+1) .feed-dot { background: var(--coral); box-shadow: 0 0 8px var(--coral); }
+body[data-theme="dark"] .feed-item:nth-child(4n+2) .feed-dot { background: var(--teal); box-shadow: 0 0 8px var(--teal); }
+body[data-theme="dark"] .feed-item:nth-child(4n+3) .feed-dot { background: var(--blue); box-shadow: 0 0 8px var(--blue); }
+body[data-theme="dark"] .feed-item:nth-child(4n+4) .feed-dot { background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+
+/* Tags */
+body[data-theme="dark"] .tag-live { background: rgba(45,212,191,0.15); color: #5EEAD4; }
+body[data-theme="dark"] .tag-closing { background: rgba(255,138,101,0.16); color: #FFA285; }
+body[data-theme="dark"] .tag-new { background: rgba(224,86,253,0.16); color: #EE8BFF; }
+body[data-theme="dark"] .nb-tag { background: rgba(96,165,250,0.12); color: #93C5FD; border-color: rgba(96,165,250,0.3); }
+
+/* Avatars, links, inputs, scrollbar */
+body[data-theme="dark"] .avatar { background: linear-gradient(135deg, #F5D98B, var(--hot-purple)); color: #fff; border-color: var(--bg); text-shadow: 0 1px 2px rgba(0,0,0,0.35); }
+body[data-theme="dark"] .panel-link { color: var(--blue); }
+body[data-theme="dark"] .dataset-card { border-top: 3px solid transparent; }
+body[data-theme="dark"] input:focus,
+body[data-theme="dark"] textarea:focus,
+body[data-theme="dark"] select:focus {
+  outline: none;
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 0 3px rgba(233,196,106,0.25);
+}
+body[data-theme="dark"] ::-webkit-scrollbar-thumb { background: linear-gradient(#F5D98B, #CF8F1A); }
+
+/* ---------- Dark-mode hovers ---------- */
+body[data-theme="dark"] .nav-item,
+body[data-theme="dark"] .comp-item,
+body[data-theme="dark"] .stat-card,
+body[data-theme="dark"] .dataset-card,
+body[data-theme="dark"] .team-chip,
+body[data-theme="dark"] .icon-btn,
+body[data-theme="dark"] .panel-link,
+body[data-theme="dark"] .account-dropdown-link {
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease,
+              box-shadow 0.2s ease, transform 0.2s ease;
+}
+body[data-theme="dark"] .nav-item:not(.active):hover {
+  background: linear-gradient(90deg, rgba(96,165,250,0.18), rgba(224,86,253,0.14));
+  color: #FFFFFF;
+  box-shadow: inset 0 0 0 1px rgba(96,165,250,0.35);
+}
+body[data-theme="dark"] .sidebar .nav-item:not(.active):hover { transform: translateX(4px); }
+body[data-theme="dark"] .nav-item:not(.active):hover svg { color: var(--blue); opacity: 1; }
+
+body[data-theme="dark"] .nav-item.active:hover,
+body[data-theme="dark"] .tour-btn-primary:hover {
+  background: linear-gradient(135deg, #FBE6A6 0%, #F0B53C 50%, #DB7F12 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px -8px rgba(240,181,60,0.7), 0 0 0 3px rgba(245,217,139,0.25);
+}
+body[data-theme="dark"] .nav-item.active:active { transform: translateY(0); }
+body[data-theme="dark"] .sidebar .nav-item.active:hover { transform: none; }
+
+body[data-theme="dark"] .comp-item:hover {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(96,165,250,0.4);
+  transform: translateX(4px);
+  box-shadow: 0 10px 24px -12px rgba(96,165,250,0.55);
+}
+body[data-theme="dark"] .stat-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--accent, var(--gold));
+  box-shadow: 0 16px 32px -14px var(--accent, var(--gold));
+}
+body[data-theme="dark"] .dataset-card:hover {
+  border-top-color: var(--hot-purple);
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px -14px rgba(224,86,253,0.6);
+}
+body[data-theme="dark"] .team-chip:hover {
+  border-color: rgba(224,86,253,0.4);
+  background: linear-gradient(90deg, rgba(255,255,255,0.07), rgba(224,86,253,0.08));
+}
+body[data-theme="dark"] .panel-link:hover { color: var(--hot-purple); text-decoration: underline; text-underline-offset: 3px; }
+body[data-theme="dark"] .icon-btn:hover { border-color: var(--blue); color: var(--blue); background: rgba(96,165,250,0.08); transform: translateY(-1px); }
+body[data-theme="dark"] .account-trigger:hover { box-shadow: 0 0 0 3px rgba(224,86,253,0.35); }
+body[data-theme="dark"] .account-dropdown-link:hover {
+  background: linear-gradient(90deg, rgba(96,165,250,0.16), rgba(224,86,253,0.1));
+  color: #fff;
+}
+body[data-theme="dark"] .theme-toggle button:not(.active):hover { color: #fff; background: rgba(96,165,250,0.14); }
+body[data-theme="dark"] .toggle-password:hover { color: var(--gold) !important; }

@@ -2,18 +2,41 @@
 
 $params = require __DIR__ . '/params.php';
 $db = require __DIR__ . '/db.php';
+$mail = require __DIR__ . '/mail-local.php';
 
 $config = [
     'id' => 'basic',
     'basePath' => dirname(__DIR__),
     'bootstrap' => ['log'],
+    'on beforeRequest' => function ($event) {
+        if (!Yii::$app->user->isGuest) {
+            $timeout = 10; // seconds of inactivity before forced logout — change this one number to whatever you want
+
+            $lastActive = Yii::$app->session->get('__lastActive');
+
+            if ($lastActive !== null && (time() - $lastActive) > $timeout) {
+                Yii::$app->user->logout();
+                Yii::$app->session->setFlash('error', 'Your session expired due to inactivity. Please log in again.');
+                Yii::$app->response->redirect(['site/login'])->send();
+                Yii::$app->end();
+            }
+
+            Yii::$app->session->set('__lastActive', time());
+        }
+    },
     'container' => [
         'singletons' => [
             \yii\mail\MailerInterface::class => [
                 'class' => \yii\symfonymailer\Mailer::class,
-                // send all mails to a file by default.
-                'useFileTransport' => true,
+                'useFileTransport' => false,
                 'viewPath' => '@app/mail',
+                'transport' => [
+                    'scheme' => 'smtp',
+                    'host' => 'smtp.gmail.com',
+                    'port' => 587,
+                    'username' => $mail['username'],
+                    'password' => $mail['password'],
+                ],
             ],
         ],
     ],
@@ -35,9 +58,10 @@ $config = [
         'user' => [
             'identityClass' => \app\models\User::class,
             'enableAutoLogin' => true,
+            'authTimeout' => 10,
         ],
         'session' => [
-            'timeout' => 600 // 10mins of inactivity before session expires
+            'timeout' => 10 // 10mins of inactivity before session expires
         ],
         'errorHandler' => [
             'errorAction' => 'site/error',
