@@ -46,8 +46,21 @@ $config = [
     ],
     'components' => [
         'request' => [
+
+        'trustedHosts' => [
+            '127.0.0.1',
+            '::1',
+        ],
+        'secureHeaders' => [
+            'X-Forwarded-For',
+            'X-Forwarded-Host',
+            'X-Forwarded-Proto',
+            'X-Forwarded-Port',
+        ],
+        
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
             'cookieValidationKey' => 'Lf23StbMGVvaBCzScABC9rYXoEayii2T',
+
         ],
         'authManager' => [
             'class' => 'yii\rbac\DbManager',
