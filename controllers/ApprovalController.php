@@ -192,7 +192,7 @@ class ApprovalController extends Controller
     /** Approve a student's ID + proof-of-registration submission. */
     public function actionApproveStudent(int $id)
     {
-        if (!Yii::$app->user->can('manageUsers')) {
+        if (!Yii::$app->user->can('approveCompetition')) { // moderators (lecturers) and admins
             throw new ForbiddenHttpException('You do not have permission to verify students.');
         }
 
@@ -222,7 +222,7 @@ class ApprovalController extends Controller
     /** Reject a student's submission — they can resubmit with corrected info/document. */
     public function actionRejectStudent(int $id)
     {
-        if (!Yii::$app->user->can('manageUsers')) {
+        if (!Yii::$app->user->can('approveCompetition')) { // moderators (lecturers) and admins
             throw new ForbiddenHttpException('You do not have permission to verify students.');
         }
 

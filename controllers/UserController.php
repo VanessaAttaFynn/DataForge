@@ -138,7 +138,7 @@ class UserController extends Controller
     /** Streams the proof-of-registration document — own document, or any moderator/admin. */
     public function actionViewProof(int $id)
     {
-        if ((int) Yii::$app->user->id !== $id && !Yii::$app->user->can('manageUsers')) {
+        if ((int) Yii::$app->user->id !== $id && !Yii::$app->user->can('approveCompetition')) { // owner, moderators, admins
             throw new ForbiddenHttpException('You do not have permission to view this document.');
         }
 

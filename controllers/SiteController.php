@@ -49,7 +49,7 @@ class SiteController extends Controller
                 'rules' => [
                     [
                         'allow' => true,
-                        'actions' => ['login', 'signup', 'verify-email', 'serve-image'],
+                        'actions' => ['login', 'signup', 'verify-email', 'serve-image', 'error'],
                         'roles' => ['?', '@'],
                     ],
                     [
