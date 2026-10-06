@@ -1,0 +1,231 @@
+listing_id,neighbourhood,bedrooms,sqm,rent_ghs
+1,Adenta,2,95,347.7
+2,Adenta,3,80,799.9
+3,East Legon,2,309,418
+4,East Legon,3,240,794
+5,Dansoman,2,26,330.8
+6,Spintex,2,284,288.6
+7,Dansoman,5,20,707.3
+8,East Legon,2,282,596.8
+9,East Legon,1,111,772.4
+10,Adenta,4,230,640.6
+11,East Legon,5,124,423.3
+12,Adenta,1,232,630.7
+13,Madina,4,96,567.1
+14,Adenta,2,144,522.9
+15,East Legon,2,246,746.6
+16,Madina,5,376,237.4
+17,Madina,5,334,882.9
+18,Spintex,2,391,276.4
+19,Osu,1,194,129.7
+20,Dansoman,4,147,324
+21,Madina,5,179,787.9
+22,Dansoman,1,201,869.7
+23,Dansoman,4,344,628
+24,Spintex,2,379,515.4
+25,Dansoman,4,168,91.7
+26,Osu,4,256,96.6
+27,Dansoman,1,209,28.4
+28,Madina,2,253,203.4
+29,Adenta,1,162,117.8
+30,Osu,3,206,583.4
+31,Spintex,3,52,73.6
+32,Dansoman,3,40,817.1
+33,Spintex,5,66,328.7
+34,Osu,5,135,43.9
+35,Madina,5,287,147.5
+36,Osu,2,182,355.6
+37,Dansoman,5,45,318.4
+38,Madina,5,290,776.6
+39,Spintex,5,269,239.2
+40,Madina,5,61,777.6
+41,Adenta,3,330,817.7
+42,Madina,3,36,490
+43,East Legon,5,187,23.4
+44,Dansoman,2,207,92
+45,Dansoman,5,400,503.8
+46,Adenta,4,310,671.9
+47,East Legon,3,282,157.3
+48,Dansoman,2,313,627.4
+49,Spintex,4,361,395.8
+50,Adenta,5,192,811.2
+51,Adenta,5,306,371.9
+52,Osu,3,218,361.3
+53,Spintex,3,105,754.5
+54,Dansoman,2,340,287.9
+55,East Legon,2,156,606.9
+56,Osu,5,332,733.5
+57,East Legon,4,315,277
+58,East Legon,3,66,627.2
+59,Dansoman,4,192,467.6
+60,Spintex,1,223,3
+61,Dansoman,1,141,120.4
+62,Adenta,5,63,364
+63,Adenta,1,257,464.9
+64,Osu,4,398,245.5
+65,Spintex,1,270,46.2
+66,Spintex,5,372,540.8
+67,East Legon,5,226,722.3
+68,Dansoman,3,368,175.1
+69,Adenta,3,393,149.3
+70,East Legon,2,60,426.1
+71,Dansoman,4,69,288.7
+72,Madina,4,375,471.2
+73,East Legon,4,231,449.7
+74,Adenta,2,80,499.1
+75,Osu,4,116,823.2
+76,Osu,5,188,189.1
+77,Madina,2,342,107.4
+78,Madina,4,393,732.9
+79,Spintex,4,203,142.9
+80,Adenta,3,334,283.9
+81,Madina,5,252,356.8
+82,Spintex,1,361,579.3
+83,Dansoman,1,354,858.3
+84,East Legon,1,200,732.8
+85,East Legon,4,31,422.3
+86,East Legon,2,130,59.2
+87,Adenta,2,309,558.3
+88,Adenta,5,156,379.5
+89,Dansoman,3,147,699.8
+90,Dansoman,4,343,883.4
+91,East Legon,1,333,584.5
+92,Osu,4,300,833.7
+93,Adenta,1,356,424
+94,Madina,2,70,25.2
+95,Osu,2,181,887.6
+96,Madina,5,137,44.3
+97,Dansoman,1,345,371.3
+98,Dansoman,3,218,23.8
+99,Spintex,2,399,262.8
+100,Adenta,5,225,892
+101,Madina,3,236,358.9
+102,East Legon,4,362,180.3
+103,East Legon,3,281,843.1
+104,Madina,4,159,387.2
+105,Adenta,3,38,258.3
+106,East Legon,3,44,694.6
+107,East Legon,4,129,379.9
+108,East Legon,5,173,464
+109,East Legon,1,180,69.2
+110,Osu,3,190,376.6
+111,Dansoman,3,126,681.8
+112,Dansoman,2,49,591.6
+113,Osu,5,391,718.8
+114,East Legon,4,242,527.8
+115,Spintex,2,40,201.7
+116,Madina,2,49,698.2
+117,Spintex,1,137,64.8
+118,Madina,4,310,381.2
+119,Dansoman,5,314,58.1
+120,East Legon,3,303,602.5
+121,East Legon,4,344,875.6
+122,Adenta,5,294,331.4
+123,Madina,1,55,398.7
+124,East Legon,2,388,186.6
+125,Spintex,2,40,891.3
+126,Madina,1,220,270.1
+127,Spintex,3,328,696.3
+128,East Legon,1,147,830.3
+129,Adenta,4,168,805.2
+130,Spintex,2,287,542
+131,East Legon,5,243,469
+132,Spintex,5,236,163.4
+133,Osu,2,391,355.2
+134,Spintex,3,126,73.9
+135,Spintex,3,281,519.5
+136,East Legon,3,167,775.6
+137,East Legon,4,385,415.5
+138,East Legon,1,231,446.6
+139,Spintex,3,226,796.6
+140,Madina,2,274,10.7
+141,Dansoman,1,250,346.7
+142,Spintex,5,32,882.9
+143,Osu,4,158,215.7
+144,Spintex,2,145,812.3
+145,Spintex,3,289,162.3
+146,Spintex,3,213,447.3
+147,Adenta,4,188,599.6
+148,Osu,1,107,426.7
+149,Adenta,3,316,468
+150,Dansoman,3,400,407.8
+151,Osu,2,232,273.3
+152,Madina,1,342,412.3
+153,East Legon,3,193,191.4
+154,Osu,5,82,429.5
+155,Spintex,1,26,414.5
+156,Osu,1,319,224.5
+157,Spintex,3,133,616.8
+158,East Legon,3,50,613.4
+159,East Legon,5,121,318
+160,Osu,3,313,78.5
+161,Adenta,2,363,18.4
+162,Spintex,2,353,719.5
+163,Osu,4,74,586.9
+164,Madina,4,115,838.7
+165,Spintex,1,105,43.2
+166,Dansoman,4,391,375
+167,East Legon,2,25,749.9
+168,Dansoman,3,258,621.7
+169,East Legon,3,78,555.1
+170,East Legon,5,112,461.8
+171,Dansoman,4,253,37.6
+172,Osu,1,194,552
+173,Osu,5,56,120.3
+174,Spintex,5,183,879.5
+175,Dansoman,2,212,350.8
+176,Spintex,3,169,568.3
+177,Madina,3,172,715.2
+178,Spintex,5,78,194
+179,Madina,5,94,732.9
+180,Adenta,2,95,316.3
+181,Madina,1,144,630.3
+182,Osu,4,254,658.1
+183,Madina,3,204,144.6
+184,Adenta,1,65,705.5
+185,East Legon,1,201,592.9
+186,East Legon,5,76,128.5
+187,Madina,4,350,485.2
+188,Adenta,2,51,343.9
+189,Dansoman,2,96,606.1
+190,Adenta,3,26,521.6
+191,East Legon,2,318,566.4
+192,Dansoman,3,22,795.1
+193,East Legon,5,137,611
+194,Spintex,1,138,788.2
+195,Spintex,4,185,141.5
+196,Dansoman,2,207,410.1
+197,Adenta,5,146,188.2
+198,Dansoman,3,256,166.3
+199,Madina,3,62,466.5
+200,East Legon,3,381,370.8
+201,Adenta,4,203,538.1
+202,Dansoman,5,54,325.6
+203,Spintex,4,106,473.6
+204,East Legon,3,357,331.6
+205,Adenta,3,269,5
+206,East Legon,5,318,352.4
+207,Madina,5,367,422.4
+208,Adenta,5,108,148.4
+209,Dansoman,4,120,828.2
+210,East Legon,1,93,374.1
+211,East Legon,2,356,273.5
+212,Madina,4,220,256.9
+213,Dansoman,3,126,74.2
+214,Dansoman,4,189,362.6
+215,Spintex,4,123,206.6
+216,Dansoman,5,341,365.3
+217,Spintex,1,325,198.6
+218,East Legon,2,291,367.7
+219,East Legon,4,190,310.6
+220,Dansoman,1,110,834.9
+221,Madina,3,46,818.1
+222,Spintex,4,55,217.2
+223,Osu,4,267,743.1
+224,Adenta,4,281,616.5
+225,Madina,4,363,13.8
+226,Spintex,5,171,393.8
+227,Dansoman,5,344,232.7
+228,Spintex,4,163,625.2
+229,East Legon,2,303,50.5
+230,Osu,4,359,744.6

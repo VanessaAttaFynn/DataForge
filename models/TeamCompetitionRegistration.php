@@ -52,6 +52,22 @@ class TeamCompetitionRegistration extends ActiveRecord
         return (int) TeamCompetitionMember::find()->where(['registration_id' => $this->id])->count();
     }
 
+    /**
+     * The line-up can't change once registration has closed, or once this entry
+     * has made its first submission (covers competitions with no registration deadline).
+     */
+    public function isLineupLocked(): bool
+    {
+        return !$this->competitionPost->competition->isRegistrationOpen() || $this->hasSubmissions();
+    }
+
+    public function lockReason(): string
+    {
+        return !$this->competitionPost->competition->isRegistrationOpen()
+            ? 'registration for this competition has closed'
+            : 'this entry has already made submissions';
+    }
+
     public function hasSubmissions(): bool
     {
         return Submission::find()

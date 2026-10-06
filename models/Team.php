@@ -6,6 +6,9 @@ use yii\db\ActiveRecord;
 
 class Team extends ActiveRecord
 {
+    /** Every team's member cap (fixed for now). Competition team sizes can't exceed it. */
+    const DEFAULT_CAP = 10;
+
     public static function tableName()
     {
         return '{{%team}}';

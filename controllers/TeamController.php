@@ -71,7 +71,7 @@ class TeamController extends Controller
                         'name' => $name,
                         'owner_id' => Yii::$app->user->id,
                         'created_at' => time(),
-                        'cap' => 10, // fixed for now; admin-adjustable later
+                        'cap' => Team::DEFAULT_CAP, // fixed for now; admin-adjustable later
                     ]);
                     if (!$team->save()) {
                         throw new \RuntimeException('Failed to create team.');
@@ -146,15 +146,15 @@ class TeamController extends Controller
                 continue;
             }
 
-            $rank = \app\components\LeaderboardService::rankFor($competitionPost->id, $competition, 'team', $team->id);
-            if ($rank === null) {
-                continue;
+            $placement = \app\components\LeaderboardService::placement($competitionPost->id, $competition, 'team', $team->id);
+            if ($placement === null) {
+                continue; // never submitted
             }
 
-            if ($rank === 1) {
+            if ($placement['won']) {
                 $competitionPost->type === 'hackathon' ? $hackathonsWon++ : $challengesWon++;
             }
-            if ($rank <= 10) {
+            if ($placement['top10']) {
                 $top10Count++;
             }
         }
@@ -413,7 +413,7 @@ class TeamController extends Controller
             return $this->redirect(['manage', 'id' => $team->id]);
         }
 
-        if ($otherMembers > 0 && ($error = $this->dropFromOpenLineups($team, $userId, 'You'))) {
+        if ($error = $this->dropFromOpenLineups($team, $userId, 'You')) {
             Yii::$app->session->setFlash('error', $error);
             return $this->redirect(['manage', 'id' => $team->id]);
         }
@@ -478,8 +478,8 @@ class TeamController extends Controller
         $competition = $registration->competitionPost->competition;
         $back = ['manage', 'id' => $team->id, '#' => 'competitions'];
 
-        if (!$competition->isRegistrationOpen()) {
-            Yii::$app->session->setFlash('error', 'Registration for this competition has closed — the line-up is locked.');
+        if ($registration->isLineupLocked()) {
+            Yii::$app->session->setFlash('error', 'The line-up is locked — ' . $registration->lockReason() . '.');
             return $this->redirect($back);
         }
         if (!$team->isMember($userId)) {
@@ -528,8 +528,8 @@ class TeamController extends Controller
         }
 
         $competition = $registration->competitionPost->competition;
-        if (!$competition->isRegistrationOpen()) {
-            Yii::$app->session->setFlash('error', 'Registration for this competition has closed — the line-up is locked.');
+        if ($registration->isLineupLocked()) {
+            Yii::$app->session->setFlash('error', 'The line-up is locked — ' . $registration->lockReason() . '.');
             return $this->redirect($back);
         }
 
@@ -601,10 +601,11 @@ class TeamController extends Controller
     // ---------- Helpers ----------
 
     /**
-     * Before someone leaves or is removed: take them off every line-up whose
-     * registration is still open. Line-ups that are already locked keep them
-     * (that entry's history stays as it was). Returns an error message if that
-     * would push a line-up below its minimum, null if done.
+     * Before someone leaves or is removed:
+     *  - If they're on a LOCKED line-up of a competition that hasn't ended, they can't
+     *    leave yet (Kaggle-style: you're committed to that entry until it's over).
+     *  - Otherwise they come off every line-up that can still change. Returns an error
+     *    if that would push a line-up below its minimum, null if done.
      */
     private function dropFromOpenLineups(Team $team, int $userId, string $who): ?string
     {
@@ -618,13 +619,18 @@ class TeamController extends Controller
         foreach ($rows as $row) {
             $registration = $row->registration;
             $competition = $registration->competitionPost->competition;
-            if (!$competition->isRegistrationOpen()) {
-                continue; // locked line-up — leave history alone
+            $title = $registration->competitionPost->title;
+            if ($registration->isLineupLocked()) {
+                if ($competition->hasEnded()) {
+                    continue; // finished competition — the entry is history, nothing to protect
+                }
+                $until = empty($competition->deadline) ? 'it ends' : date('M j, Y H:i', strtotime($competition->deadline));
+                return "{$who} " . ($who === 'You' ? 'are' : 'is') . " on the locked line-up for \"{$title}\" and can't leave the team until that competition ends ({$until}).";
             }
             $newCount = $registration->getLineupCount() - 1;
             $min = max(1, (int) $competition->team_size_min);
             if ($newCount < $min) {
-                return "{$who} is on the line-up for \"{$registration->competitionPost->title}\", which needs at least {$min}. "
+                return "{$who} " . ($who === 'You' ? 'are' : 'is') . " on the line-up for \"{$title}\", which needs at least {$min}. "
                     . 'Add someone else to that line-up first, or withdraw the entry.';
             }
             $toDrop[] = $row;

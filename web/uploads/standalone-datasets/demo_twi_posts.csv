@@ -1,0 +1,271 @@
+post_id,text,label
+1,"ɛyɛ me pɛ",1
+2,"medaase ɛyɛ dɛ",1
+3,"ɛyɛ dɛ ɛnyɛ",1
+4,"akwaaba ɛyɛ",1
+5,"ayeeko ayeeko",1
+6,"mepa wo kyɛw ɛnyɛ",1
+7,"ɛyɛ dɛ me pɛ",0
+8,"me pɛ ayeeko",0
+9,"ɛyɛ akwaaba",0
+10,"ɛyɛ ɛyɛ dɛ",1
+11,"ɛyɛ dɛ akwaaba",0
+12,"ɛnyɛ ɛyɛ dɛ",1
+13,"ɛyɛ dɛ akwaaba",0
+14,"mepa wo kyɛw ɛyɛ dɛ",1
+15,"mepa wo kyɛw medaase",1
+16,"ayeeko ɛyɛ",1
+17,"akwaaba akwaaba",0
+18,"ɛyɛ dɛ ayeeko",1
+19,"mepa wo kyɛw ɛyɛ",0
+20,"akwaaba ɛyɛ dɛ",0
+21,"akwaaba me pɛ",1
+22,"ɛyɛ dɛ ɛyɛ dɛ",1
+23,"ɛnyɛ ɛnyɛ",0
+24,"ɛyɛ dɛ ayeeko",1
+25,"me pɛ medaase",1
+26,"medaase medaase",0
+27,"ayeeko mepa wo kyɛw",1
+28,"ayeeko medaase",0
+29,"ɛyɛ me pɛ",0
+30,"mepa wo kyɛw medaase",0
+31,"ɛyɛ dɛ ayeeko",1
+32,"ɛnyɛ ɛyɛ",0
+33,"ɛyɛ ɛyɛ",0
+34,"ayeeko ayeeko",1
+35,"mepa wo kyɛw ɛyɛ dɛ",0
+36,"ɛyɛ dɛ ɛyɛ dɛ",0
+37,"ɛnyɛ ayeeko",1
+38,"me pɛ mepa wo kyɛw",0
+39,"ayeeko ayeeko",0
+40,"ɛyɛ dɛ me pɛ",0
+41,"ɛyɛ ɛyɛ dɛ",1
+42,"medaase ayeeko",0
+43,"ɛnyɛ ɛnyɛ",0
+44,"ɛyɛ dɛ ɛyɛ dɛ",1
+45,"ayeeko ayeeko",0
+46,"medaase ɛnyɛ",0
+47,"me pɛ ɛyɛ dɛ",1
+48,"ayeeko ɛyɛ dɛ",0
+49,"me pɛ ɛnyɛ",0
+50,"ɛnyɛ ayeeko",0
+51,"ɛnyɛ me pɛ",0
+52,"me pɛ ayeeko",0
+53,"me pɛ ayeeko",0
+54,"medaase ɛyɛ",1
+55,"ɛyɛ dɛ mepa wo kyɛw",1
+56,"medaase ɛnyɛ",1
+57,"akwaaba mepa wo kyɛw",0
+58,"ɛnyɛ akwaaba",1
+59,"akwaaba ayeeko",1
+60,"ayeeko ɛyɛ",1
+61,"medaase akwaaba",1
+62,"mepa wo kyɛw akwaaba",1
+63,"akwaaba mepa wo kyɛw",1
+64,"ɛnyɛ medaase",1
+65,"mepa wo kyɛw medaase",1
+66,"ɛyɛ ɛyɛ",0
+67,"akwaaba mepa wo kyɛw",0
+68,"ayeeko mepa wo kyɛw",1
+69,"ayeeko ɛnyɛ",0
+70,"ayeeko ɛyɛ",0
+71,"ɛyɛ akwaaba",1
+72,"ayeeko akwaaba",0
+73,"ɛyɛ dɛ akwaaba",0
+74,"mepa wo kyɛw ɛyɛ dɛ",0
+75,"ayeeko ayeeko",0
+76,"ɛyɛ akwaaba",0
+77,"ɛyɛ mepa wo kyɛw",0
+78,"ɛyɛ ɛnyɛ",0
+79,"akwaaba ɛyɛ dɛ",0
+80,"me pɛ akwaaba",0
+81,"ɛyɛ dɛ akwaaba",1
+82,"me pɛ ayeeko",0
+83,"ayeeko me pɛ",1
+84,"ɛyɛ dɛ ɛyɛ dɛ",0
+85,"ɛnyɛ me pɛ",0
+86,"ɛyɛ ɛnyɛ",1
+87,"ɛnyɛ ɛnyɛ",0
+88,"mepa wo kyɛw ɛnyɛ",0
+89,"medaase me pɛ",1
+90,"medaase medaase",1
+91,"ɛnyɛ akwaaba",0
+92,"me pɛ akwaaba",1
+93,"medaase ɛyɛ",1
+94,"ɛyɛ dɛ mepa wo kyɛw",0
+95,"ɛnyɛ ɛnyɛ",0
+96,"ɛnyɛ ɛnyɛ",1
+97,"ɛyɛ mepa wo kyɛw",0
+98,"ɛnyɛ ɛyɛ",1
+99,"akwaaba ayeeko",1
+100,"mepa wo kyɛw mepa wo kyɛw",0
+101,"ayeeko ayeeko",1
+102,"ayeeko medaase",0
+103,"mepa wo kyɛw mepa wo kyɛw",1
+104,"ayeeko ɛnyɛ",0
+105,"medaase ɛnyɛ",0
+106,"medaase me pɛ",1
+107,"ɛyɛ dɛ ɛnyɛ",1
+108,"me pɛ ayeeko",1
+109,"akwaaba akwaaba",0
+110,"ɛyɛ ayeeko",1
+111,"medaase ɛyɛ dɛ",1
+112,"ɛyɛ ɛyɛ dɛ",1
+113,"mepa wo kyɛw mepa wo kyɛw",0
+114,"mepa wo kyɛw medaase",0
+115,"ɛyɛ dɛ ayeeko",1
+116,"medaase ɛyɛ dɛ",0
+117,"ayeeko medaase",1
+118,"mepa wo kyɛw me pɛ",1
+119,"ɛyɛ akwaaba",1
+120,"ɛyɛ dɛ akwaaba",1
+121,"mepa wo kyɛw ɛnyɛ",1
+122,"ayeeko ɛyɛ",0
+123,"mepa wo kyɛw ɛyɛ dɛ",1
+124,"ɛyɛ ɛnyɛ",0
+125,"medaase medaase",1
+126,"ɛnyɛ mepa wo kyɛw",1
+127,"ɛnyɛ me pɛ",0
+128,"medaase akwaaba",0
+129,"ɛyɛ medaase",0
+130,"mepa wo kyɛw ɛyɛ dɛ",1
+131,"medaase akwaaba",0
+132,"akwaaba mepa wo kyɛw",1
+133,"mepa wo kyɛw medaase",1
+134,"ɛyɛ medaase",0
+135,"medaase medaase",1
+136,"akwaaba ɛnyɛ",1
+137,"ɛyɛ dɛ mepa wo kyɛw",0
+138,"akwaaba medaase",0
+139,"ɛnyɛ mepa wo kyɛw",0
+140,"ayeeko medaase",1
+141,"ayeeko ayeeko",0
+142,"ɛyɛ mepa wo kyɛw",1
+143,"ɛyɛ akwaaba",0
+144,"ayeeko ayeeko",0
+145,"akwaaba mepa wo kyɛw",0
+146,"medaase ɛyɛ",0
+147,"ɛnyɛ me pɛ",0
+148,"ɛyɛ dɛ me pɛ",0
+149,"mepa wo kyɛw medaase",0
+150,"ayeeko ɛyɛ",0
+151,"medaase ɛyɛ dɛ",0
+152,"medaase akwaaba",1
+153,"ayeeko akwaaba",1
+154,"medaase akwaaba",1
+155,"ɛnyɛ me pɛ",0
+156,"akwaaba medaase",1
+157,"me pɛ mepa wo kyɛw",1
+158,"me pɛ ɛyɛ",1
+159,"ɛnyɛ medaase",1
+160,"ayeeko ɛyɛ",1
+161,"mepa wo kyɛw ɛyɛ",0
+162,"me pɛ ayeeko",1
+163,"ɛyɛ ayeeko",0
+164,"ɛyɛ ɛyɛ dɛ",0
+165,"ɛyɛ ɛnyɛ",0
+166,"mepa wo kyɛw mepa wo kyɛw",0
+167,"medaase mepa wo kyɛw",0
+168,"mepa wo kyɛw akwaaba",1
+169,"medaase ɛyɛ",1
+170,"ɛnyɛ me pɛ",1
+171,"medaase akwaaba",1
+172,"medaase ayeeko",0
+173,"medaase akwaaba",0
+174,"mepa wo kyɛw akwaaba",1
+175,"ayeeko ɛyɛ",1
+176,"me pɛ ɛyɛ",1
+177,"me pɛ ɛyɛ dɛ",1
+178,"mepa wo kyɛw akwaaba",1
+179,"ɛyɛ dɛ ɛyɛ dɛ",1
+180,"ɛyɛ dɛ medaase",0
+181,"me pɛ ɛyɛ",1
+182,"akwaaba medaase",0
+183,"ɛnyɛ ayeeko",1
+184,"me pɛ ɛnyɛ",1
+185,"ɛyɛ ɛyɛ dɛ",0
+186,"me pɛ ɛnyɛ",0
+187,"ayeeko mepa wo kyɛw",1
+188,"ɛyɛ dɛ akwaaba",0
+189,"ayeeko mepa wo kyɛw",0
+190,"ɛnyɛ me pɛ",0
+191,"me pɛ akwaaba",0
+192,"ɛnyɛ ɛyɛ dɛ",1
+193,"ɛyɛ dɛ ɛyɛ",1
+194,"me pɛ ɛyɛ dɛ",0
+195,"me pɛ me pɛ",0
+196,"ayeeko ɛnyɛ",0
+197,"mepa wo kyɛw akwaaba",1
+198,"medaase akwaaba",1
+199,"mepa wo kyɛw akwaaba",0
+200,"akwaaba me pɛ",0
+201,"me pɛ ayeeko",1
+202,"ɛyɛ mepa wo kyɛw",1
+203,"mepa wo kyɛw medaase",1
+204,"mepa wo kyɛw mepa wo kyɛw",1
+205,"me pɛ akwaaba",0
+206,"ɛnyɛ ayeeko",0
+207,"me pɛ ɛnyɛ",1
+208,"akwaaba me pɛ",0
+209,"medaase ayeeko",0
+210,"ɛyɛ dɛ mepa wo kyɛw",0
+211,"ɛyɛ akwaaba",0
+212,"ayeeko ɛyɛ",1
+213,"medaase ayeeko",0
+214,"ɛyɛ ɛnyɛ",1
+215,"ɛyɛ ɛyɛ dɛ",1
+216,"medaase medaase",1
+217,"medaase akwaaba",0
+218,"ɛyɛ mepa wo kyɛw",0
+219,"mepa wo kyɛw medaase",0
+220,"medaase medaase",1
+221,"akwaaba akwaaba",1
+222,"ɛyɛ dɛ akwaaba",1
+223,"akwaaba ɛyɛ",1
+224,"ɛnyɛ ayeeko",1
+225,"ayeeko medaase",1
+226,"akwaaba ɛyɛ dɛ",1
+227,"ɛyɛ dɛ akwaaba",0
+228,"ɛyɛ medaase",0
+229,"me pɛ ɛyɛ",1
+230,"mepa wo kyɛw ayeeko",1
+231,"ɛyɛ ɛnyɛ",1
+232,"ɛyɛ akwaaba",0
+233,"mepa wo kyɛw ɛyɛ",0
+234,"ɛyɛ akwaaba",1
+235,"me pɛ ayeeko",1
+236,"ɛnyɛ ɛyɛ dɛ",0
+237,"akwaaba ayeeko",1
+238,"medaase ɛyɛ",0
+239,"mepa wo kyɛw ɛnyɛ",1
+240,"me pɛ ɛnyɛ",0
+241,"ɛnyɛ ayeeko",1
+242,"ɛyɛ mepa wo kyɛw",1
+243,"ɛnyɛ ɛnyɛ",1
+244,"mepa wo kyɛw medaase",1
+245,"ɛyɛ ɛyɛ",0
+246,"ayeeko ɛnyɛ",0
+247,"mepa wo kyɛw ayeeko",1
+248,"ɛyɛ dɛ me pɛ",0
+249,"ɛnyɛ ayeeko",0
+250,"ɛyɛ ayeeko",1
+251,"me pɛ medaase",0
+252,"ɛnyɛ mepa wo kyɛw",0
+253,"mepa wo kyɛw ayeeko",1
+254,"ɛnyɛ medaase",0
+255,"akwaaba ɛyɛ dɛ",0
+256,"mepa wo kyɛw ayeeko",1
+257,"ɛnyɛ mepa wo kyɛw",1
+258,"ɛnyɛ medaase",1
+259,"mepa wo kyɛw ɛnyɛ",0
+260,"ayeeko me pɛ",1
+261,"akwaaba ayeeko",1
+262,"ɛyɛ dɛ ɛyɛ dɛ",1
+263,"ɛyɛ me pɛ",1
+264,"ayeeko me pɛ",0
+265,"ɛyɛ medaase",0
+266,"medaase ɛyɛ",1
+267,"medaase mepa wo kyɛw",0
+268,"mepa wo kyɛw ɛyɛ",1
+269,"akwaaba medaase",0
+270,"ɛnyɛ ɛyɛ dɛ",1

@@ -93,10 +93,10 @@ $memberCount = $team->getConsentedMemberCount();
         <div><div class="stat-num" style="font-size: 20px;"><?= $stats['hackathons_won'] ?></div><div class="stat-label">Hackathons Won</div></div>
     </div>
     <div class="stat-card" style="justify-content: center; text-align: center;">
-        <div><div class="stat-num" style="font-size: 20px;"><?= $stats['top_10_count'] ?></div><div class="stat-label">Top 10 Finishes</div></div>
+        <div><div class="stat-num" style="font-size: 20px;"><?= $stats['top_10_count'] ?></div><div class="stat-label">Top 10% Finishes</div></div>
     </div>
 </div>
-<div style="font-size: 11px; color: var(--text-faint); margin: -8px 0 20px 4px;">Win / top-10 counts are based on final rank once a competition has ended.</div>
+<div style="font-size: 11px; color: var(--text-faint); margin: -8px 0 20px 4px;">Wins and top-10% finishes count once a competition has ended, and only when at least 2 entries submitted. Top 10% is out of everyone who submitted (at least 1st place).</div>
 
 <?php if ($isOwner): ?>
 <div class="panel">
@@ -213,7 +213,7 @@ $myId = (int) Yii::$app->user->id;
             <?php
             $compPost = $reg->competitionPost;
             $comp = $compPost->competition;
-            $open = $comp->isRegistrationOpen();
+            $open = !$reg->isLineupLocked();
             $lineup = $reg->lineup;
             $lineupIds = array_map(fn($l) => (int) $l->user_id, $lineup);
             $addable = array_filter($members, fn($m) => !in_array((int) $m->user_id, $lineupIds, true));
@@ -226,7 +226,7 @@ $myId = (int) Yii::$app->user->id;
                         <div class="team-meta">
                             <?= ucfirst($compPost->type) ?> · line-up <?= count($lineup) ?><?= $comp->team_size_limit ? '/' . $comp->team_size_limit : '' ?>
                             <?= $comp->teamSizeLabel() ? ' (allowed: ' . Html::encode($comp->teamSizeLabel()) . ')' : '' ?>
-                            · <?= $open ? 'can change until registration closes' : '🔒 locked' ?>
+                            · <?= $open ? 'can change until registration closes or the first submission' : '🔒 locked — ' . Html::encode($reg->lockReason()) ?>
                         </div>
                     </div>
                 </div>

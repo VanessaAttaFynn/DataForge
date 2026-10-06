@@ -37,6 +37,10 @@ class Competition extends ActiveRecord
     const RECOMMENDED_SUBMISSION_CAP_MIN = 5;
     const RECOMMENDED_SUBMISSION_CAP_MAX = 10;
 
+    // In "register first, submit later" mode, submissions only open when registration
+    // closes — so the final deadline must leave at least this much time to submit.
+    const MIN_SUBMISSION_WINDOW = 86400; // 1 day
+
     public static function tableName()
     {
         return '{{%competition}}';
@@ -47,7 +51,8 @@ class Competition extends ActiveRecord
         return [
             [['post_id', 'metric', 'accepts', 'submission_cap_per_day', 'reward_type'], 'required'],
             [['post_id', 'team_size_min', 'team_size_limit', 'submission_cap_per_day'], 'integer'],
-            [['team_size_min', 'team_size_limit'], 'integer', 'min' => 1],
+            [['team_size_min', 'team_size_limit'], 'integer', 'min' => 1, 'max' => Team::DEFAULT_CAP,
+                'tooBig' => '{attribute} can\'t be more than ' . Team::DEFAULT_CAP . ' — teams hold at most ' . Team::DEFAULT_CAP . ' members.'],
             [['team_size_min'], 'validateTeamSizes'],
             [['reward_details'], 'string'],
             [['registration_deadline', 'deadline'], 'safe'],
@@ -189,8 +194,26 @@ class Competition extends ActiveRecord
     public function validateRegistrationBeforeDeadline(): void
     {
         if (!empty($this->registration_deadline) && !empty($this->deadline)
-            && strtotime($this->registration_deadline) > strtotime($this->deadline)) {
-            $this->addError('registration_deadline', 'Registration deadline cannot be after the submission deadline.');
+            && strtotime($this->deadline) - strtotime($this->registration_deadline) < self::MIN_SUBMISSION_WINDOW) {
+            $this->addError('registration_deadline', 'The final deadline must be at least 1 day after the registration deadline — submissions only open once registration closes.');
         }
+    }
+
+    /** e.g. "Registration closes Oct 10, 16:06 · Submissions open then and close Oct 15, 16:06". */
+    public function scheduleLabel(): string
+    {
+        $fmt = fn($d) => date('M j, Y H:i', strtotime($d));
+        if ($this->hasEnded()) {
+            return 'Completed · closed ' . $fmt($this->deadline);
+        }
+        $parts = [];
+        if (!empty($this->registration_deadline) && !$this->registrationDeadlinePassed()) {
+            $parts[] = 'Registration closes ' . $fmt($this->registration_deadline);
+            $parts[] = 'Submissions open then and ' . (empty($this->deadline) ? 'have no end date' : 'close ' . $fmt($this->deadline));
+        } else {
+            $parts[] = empty($this->registration_deadline) ? 'Register and submit any time' : 'Registration closed';
+            $parts[] = empty($this->deadline) ? 'Submissions have no end date' : 'Submissions close ' . $fmt($this->deadline);
+        }
+        return implode(' · ', $parts);
     }
 }

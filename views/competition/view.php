@@ -24,7 +24,7 @@ $hasDatasetAccess = $hasAnyRegistration || $canManage;
     <div>
         <div class="eyebrow"><?= ucfirst($post->type) ?><?= $post->status !== 'published' ? ' · ' . ucfirst($post->status) : '' ?></div>
         <h1 class="page-title"><?= Html::encode($post->title) ?></h1>
-        <div class="page-sub">deadline <?= Html::encode($competition->deadlineLabel()) ?> · <?= Html::encode($competition->phaseLabel()) ?></div>
+        <div class="page-sub"><?= Html::encode($competition->scheduleLabel()) ?></div>
     </div>
     <div style="display: flex; gap: 10px;">
         <?php if (!Yii::$app->user->isGuest): ?>
@@ -119,10 +119,10 @@ $hasDatasetAccess = $hasAnyRegistration || $canManage;
             <div style="width: 100%; font-size: 12px; color: var(--text-dim);">
                 Line-up for this competition:
                 <?= Html::encode(implode(', ', array_map(fn($m) => $m->user->username ?? '?', $myTeamEntry->lineup))) ?>
-                <?php if ($competition->isRegistrationOpen()): ?>
-                    <span style="color: var(--text-faint);">· can change until registration closes</span>
+                <?php if (!$myTeamEntry->isLineupLocked()): ?>
+                    <span style="color: var(--text-faint);">· can change until registration closes or the first submission</span>
                 <?php else: ?>
-                    <span style="color: var(--text-faint);">· 🔒 locked</span>
+                    <span style="color: var(--text-faint);">· 🔒 locked (<?= Html::encode($myTeamEntry->lockReason()) ?>)</span>
                 <?php endif; ?>
             </div>
         <?php elseif (!$hasAnyRegistration && $competition->isRegistrationOpen()): ?>

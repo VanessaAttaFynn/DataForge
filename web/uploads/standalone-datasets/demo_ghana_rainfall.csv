@@ -1,0 +1,191 @@
+region,year,month,rain_mm
+Western,2016,12,584.5
+Western,2025,7,469.6
+Eastern,2002,4,82.2
+Ashanti,2018,6,427.2
+Eastern,2021,10,234.2
+Greater Accra,2023,12,701.1
+Western,2020,6,154.6
+Volta,2010,8,443.3
+Eastern,2000,1,59.6
+Central,2011,1,542.6
+Ashanti,2013,9,676.1
+Volta,2005,3,715.9
+Volta,2020,8,428.7
+Greater Accra,2022,12,26
+Western,2024,5,427
+Ashanti,2018,10,897
+Western,2012,10,605.1
+Central,2007,1,59.9
+Greater Accra,2025,12,229.6
+Greater Accra,2019,6,793.6
+Western,2010,2,689.9
+Western,2001,4,123.7
+Greater Accra,2017,8,762.5
+Ashanti,2010,4,299.4
+Central,2019,2,876.8
+Eastern,2010,3,15.9
+Western,2019,8,143.4
+Ashanti,2023,8,46.4
+Ashanti,2008,2,161.8
+Western,2010,8,2.4
+Ashanti,2024,6,537.5
+Western,2007,12,10.1
+Volta,2005,5,499.2
+Greater Accra,2022,5,787.8
+Central,2002,2,14.5
+Volta,2000,3,302.4
+Eastern,2000,4,549.2
+Volta,2013,1,27.9
+Eastern,2009,5,67.2
+Volta,2020,2,592.5
+Greater Accra,2016,9,207.8
+Western,2013,2,584.9
+Greater Accra,2001,1,181.5
+Eastern,2012,6,486.1
+Volta,2009,1,311.4
+Volta,2017,8,308.1
+Greater Accra,2000,1,118.3
+Ashanti,2023,7,664.7
+Eastern,2004,5,817.4
+Eastern,2024,6,879
+Central,2011,6,723.6
+Eastern,2006,10,318.7
+Greater Accra,2022,3,570.5
+Volta,2001,8,13.6
+Western,2018,1,156.2
+Central,2020,2,126.7
+Eastern,2019,12,634.3
+Eastern,2024,10,197.3
+Volta,2016,4,658.5
+Eastern,2008,12,2.3
+Central,2001,1,459.6
+Western,2000,7,336.4
+Central,2009,12,794.7
+Eastern,2012,2,192.4
+Western,2013,8,893.7
+Western,2015,9,759.1
+Volta,2023,1,4.2
+Ashanti,2010,6,457.2
+Volta,2020,2,863
+Central,2010,2,346.9
+Ashanti,2009,2,383.8
+Greater Accra,2016,12,696.5
+Ashanti,2002,1,898.2
+Volta,2003,12,13.4
+Central,2008,9,335
+Ashanti,2016,9,869.7
+Eastern,2002,5,327
+Eastern,2006,7,250
+Central,2018,5,111.6
+Central,2011,8,287
+Volta,2009,3,603.6
+Eastern,2019,6,889
+Volta,2021,10,785.9
+Greater Accra,2009,9,557.7
+Western,2000,4,466.6
+Central,2004,6,133.4
+Eastern,2023,9,896.4
+Western,2001,3,83.9
+Central,2017,10,893.4
+Eastern,2001,8,157.9
+Greater Accra,2000,2,580.6
+Western,2017,10,416
+Western,2023,11,889.2
+Ashanti,2021,10,654.7
+Volta,2010,1,465.2
+Eastern,2023,3,245.4
+Central,2008,2,236.7
+Western,2025,9,20.6
+Greater Accra,2014,8,358.1
+Central,2011,7,95
+Ashanti,2013,1,435.9
+Eastern,2004,10,474.8
+Volta,2011,1,893.9
+Greater Accra,2019,7,520.9
+Western,2023,4,765.8
+Ashanti,2025,11,535.4
+Eastern,2008,9,785
+Central,2008,12,240
+Ashanti,2007,5,228.5
+Volta,2022,10,242
+Ashanti,2022,4,564.6
+Greater Accra,2002,7,861.8
+Volta,2013,7,333
+Central,2021,9,483.3
+Western,2014,3,466.9
+Greater Accra,2002,11,80.3
+Western,2023,7,60.1
+Greater Accra,2003,8,415.5
+Greater Accra,2005,1,270.2
+Greater Accra,2021,4,674.6
+Western,2009,12,345.6
+Western,2013,7,532
+Central,2017,7,245.1
+Western,2014,12,483.5
+Eastern,2002,4,124.6
+Western,2021,9,500.5
+Volta,2007,12,749.7
+Greater Accra,2008,6,70.7
+Ashanti,2018,2,223.3
+Volta,2000,2,573.8
+Ashanti,2008,8,14.7
+Eastern,2018,4,687.6
+Volta,2005,4,849.1
+Western,2000,5,450.9
+Western,2007,5,802.9
+Central,2013,6,49.6
+Central,2022,9,156.8
+Volta,2006,11,575.8
+Greater Accra,2012,5,475.9
+Greater Accra,2021,6,150.1
+Western,2000,3,55.2
+Greater Accra,2013,5,337.9
+Ashanti,2023,1,298
+Eastern,2024,12,385.9
+Eastern,2017,2,244.8
+Greater Accra,2018,1,654.8
+Ashanti,2006,1,430.5
+Central,2023,2,613.3
+Central,2014,6,817.6
+Volta,2010,2,438.8
+Greater Accra,2013,9,842.1
+Eastern,2009,5,496.1
+Greater Accra,2001,7,523.5
+Western,2000,6,265.4
+Greater Accra,2006,2,271.1
+Volta,2014,1,288.7
+Central,2009,10,386.9
+Western,2004,3,73.1
+Volta,2002,9,359.8
+Ashanti,2019,10,885.4
+Eastern,2022,11,192
+Greater Accra,2024,12,396.4
+Central,2019,11,396.7
+Ashanti,2010,4,37.7
+Greater Accra,2000,5,794.8
+Eastern,2024,11,683.5
+Ashanti,2006,11,496.1
+Central,2005,11,68
+Greater Accra,2002,10,170.9
+Eastern,2024,10,488.3
+Central,2015,3,859.1
+Western,2015,2,713.8
+Central,2014,4,201.8
+Western,2001,3,731.5
+Eastern,2003,10,397.2
+Ashanti,2018,9,650
+Ashanti,2025,12,454.4
+Ashanti,2005,5,91.9
+Ashanti,2010,2,656.2
+Volta,2019,10,456.6
+Central,2008,4,625.2
+Eastern,2005,6,457.9
+Greater Accra,2003,5,348.7
+Central,2017,12,430.2
+Western,2012,9,424
+Eastern,2008,4,256.4
+Volta,2016,4,124.1
+Eastern,2008,8,753.6
+Greater Accra,2020,1,208.1
+Greater Accra,2002,12,607.4

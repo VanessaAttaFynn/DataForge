@@ -159,11 +159,11 @@ $inputStyle = "width: 100%; background: var(--panel-glass-strong); border: 1px s
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 6px;">
             <div>
                 <label style="<?= $labelStyle ?>">Min team size</label>
-                <input type="number" name="Competition[team_size_min]" min="1" value="<?= Html::encode($competition->team_size_min) ?>" placeholder="No minimum" style="<?= $inputStyle ?>" <?= $lockAttr ?>>
+                <input type="number" name="Competition[team_size_min]" min="1" max="<?= \app\models\Team::DEFAULT_CAP ?>" value="<?= Html::encode($competition->team_size_min) ?>" placeholder="No minimum" style="<?= $inputStyle ?>" <?= $lockAttr ?>>
             </div>
             <div>
                 <label style="<?= $labelStyle ?>">Max team size</label>
-                <input type="number" name="Competition[team_size_limit]" min="1" value="<?= Html::encode($competition->team_size_limit) ?>" placeholder="No maximum" style="<?= $inputStyle ?>" <?= $lockAttr ?>>
+                <input type="number" name="Competition[team_size_limit]" min="1" max="<?= \app\models\Team::DEFAULT_CAP ?>" value="<?= Html::encode($competition->team_size_limit) ?>" placeholder="No maximum" style="<?= $inputStyle ?>" <?= $lockAttr ?>>
             </div>
             <div>
                 <label style="<?= $labelStyle ?>">Submission cap / day <span style="color: var(--gold); font-weight: 500;">(5–10)</span></label>
@@ -171,7 +171,7 @@ $inputStyle = "width: 100%; background: var(--panel-glass-strong); border: 1px s
             </div>
         </div>
         <div style="font-size: 11px; color: var(--text-faint); margin-bottom: 18px;">
-            Team sizes apply to team entries only. Each team registers with a line-up of its members — only those people count for this competition.
+            Team sizes apply to team entries only (1–<?= \app\models\Team::DEFAULT_CAP ?>, since teams hold at most <?= \app\models\Team::DEFAULT_CAP ?> members). Each team registers with a line-up of its members — only those people count for this competition.
             <?= $locked ? '<br>🔒 Locked — people have already registered.' : '' ?>
         </div>
 
@@ -207,7 +207,7 @@ $inputStyle = "width: 100%; background: var(--panel-glass-strong); border: 1px s
             </div>
         </div>
         <div style="font-size: 11px; color: var(--text-faint); margin-bottom: 24px;">
-            Setting a registration deadline switches to sequential mode: register beforehand, submissions open only once it passes. Leave it blank to let people register and submit at any time.
+            Setting a registration deadline switches to sequential mode: register beforehand, submissions open only once it passes — so the final deadline must be at least 1 day after it. Leave it blank to let people register and submit at any time.
         </div>
     </div>
 
