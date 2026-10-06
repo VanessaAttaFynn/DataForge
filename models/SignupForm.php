@@ -20,8 +20,7 @@ class SignupForm extends Model
             ['username', 'unique', 'targetClass' => User::class, 'message' => 'This username is already taken.'],
             ['email', 'email'],
             ['email', 'unique', 'targetClass' => User::class, 'message' => 'An account with this email already exists.'],
-            // TEMP: disabled for testing with a personal email. Uncomment to restore.
-            // ['email', 'validateUniversityEmail'],
+            ['email', 'validateUniversityEmail'],
             ['password', 'string', 'min' => 8],
             ['password_confirm', 'compare', 'compareAttribute' => 'password', 'message' => 'Passwords do not match.'],
         ];

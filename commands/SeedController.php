@@ -14,6 +14,7 @@ use yii\db\Query;
  *                          entries + submissions, datasets, notebooks and votes
  *   php yii seed/more     (after seed/demo) adds 5 more users, 1 more team,
  *                          3 more competitions/hackathons, 5 datasets, 4 notebooks
+ *   php yii seed/passwords  sets every demo account's password to the one below
  *   php yii seed/clean    removes ONLY what seed/demo created (and anything that
  *                          points at it), leaving all real data alone
  *
@@ -22,7 +23,7 @@ use yii\db\Query;
  */
 class SeedController extends Controller
 {
-    const PASSWORD = 'DataForge@2026';
+    const PASSWORD = 'password@123';
     const EMAIL_MARK = '.demo@';
 
     private const LECTURERS = [
@@ -156,6 +157,16 @@ class SeedController extends Controller
         $this->stdout("  Northern Region Malaria Forecast     — ended (teams 2–3, RMSE) — won by Bayes Squad\n");
         $this->stdout("  Mobile Money Fraud Hackathon         — submissions open (teams only, 2–5)\n");
         $this->stdout("  Accra Rent Price Prediction          — registration open (teams 2–4 or solo, RMSE)\n");
+        return ExitCode::OK;
+    }
+
+    // =====================================================================
+    public function actionPasswords(): int
+    {
+        $count = Yii::$app->db->createCommand()->update('{{%user}}',
+            ['password_hash' => Yii::$app->security->generatePasswordHash(self::PASSWORD), 'updated_at' => time()],
+            ['like', 'email', self::EMAIL_MARK])->execute();
+        $this->stdout("Password set to " . self::PASSWORD . " for {$count} demo accounts.\n", 32);
         return ExitCode::OK;
     }
 

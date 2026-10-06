@@ -65,8 +65,7 @@ $hasDatasetAccess = $hasAnyRegistration || $canManage;
 
     <?php if (!$hasAnyRegistration && $competition->accepts !== 'individual' && $competition->isRegistrationOpen()): ?>
         <div style="display: flex; gap: 10px;">
-            <?= Html::a('+ Create a Team', ['/team/create'], ['class' => 'nav-item', 'style' => 'display: inline-flex; padding: 9px 20px;']) ?>
-            <?= Html::a('Browse Teams', ['teams', 'id' => $post->id], ['class' => 'nav-item', 'style' => 'display: inline-flex; padding: 9px 20px;']) ?>
+            <?= Html::a('Browse and Join Existing Teams', ['teams', 'id' => $post->id], ['class' => 'nav-item', 'style' => 'display: inline-flex; padding: 9px 20px;']) ?>
         </div>
     <?php endif; ?>
 </div>

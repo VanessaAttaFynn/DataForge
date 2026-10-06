@@ -48,10 +48,10 @@ $unreadCount = $currentUser
 
 <?php if ($currentUser !== null): ?>
 <div class="account-bar">
-    <button type="button" class="icon-btn" title="Notifications">
+    <a href="<?= \yii\helpers\Url::to(['/notification/index']) ?>" class="icon-btn" title="Notifications" style="text-decoration: none;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 8a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z"/><path d="M9.5 20a2.5 2.5 0 0 0 5 0"/></svg>
             <?php if ($unreadCount > 0): ?><span class="icon-badge"><?= $unreadCount > 9 ? '9+' : $unreadCount ?></span><?php endif; ?>
-    </button>
+    </a>
 
     <div class="account-menu-wrap">
         <button type="button" class="avatar account-trigger" data-tour="profile" onclick="document.getElementById('account-dropdown').classList.toggle('open')">
