@@ -30,13 +30,11 @@ $config = [
                 'class' => \yii\symfonymailer\Mailer::class,
                 'useFileTransport' => false,
                 'viewPath' => '@app/mail',
-                'transport' => [
-                    'scheme' => 'smtp',
-                    'host' => 'smtp.gmail.com',
-                    'port' => 587,
-                    'username' => $mail['username'],
-                    'password' => $mail['password'],
-                ],
+                // Sent through Brevo's HTTPS API (the VPS blocks outgoing SMTP ports).
+                // yii2-symfonymailer doesn't know Brevo, so build the transport with Symfony directly.
+                'transport' => \Symfony\Component\Mailer\Transport::fromDsn(
+                    'brevo+api://' . $mail['brevo_api_key'] . '@default'
+                ),
             ],
         ],
     ],
