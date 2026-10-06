@@ -10,7 +10,7 @@ $config = [
     'bootstrap' => ['log'],
     'on beforeRequest' => function ($event) {
         if (!Yii::$app->user->isGuest) {
-            $timeout = 60; // seconds of inactivity before forced logout — change this one number to whatever you want
+            $timeout = 600; // seconds of inactivity before forced logout — change this one number to whatever you want
 
             $lastActive = Yii::$app->session->get('__lastActive');
 
