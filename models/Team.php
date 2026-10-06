@@ -15,7 +15,7 @@ class Team extends ActiveRecord
     {
         return [
             [['name', 'owner_id'], 'required'],
-            [['owner_id', 'created_at', 'cap'], 'integer'],
+            [['owner_id', 'created_at', 'cap', 'archived_at'], 'integer'],
             [['name'], 'string', 'max' => 100],
             [['avatar_path'], 'string', 'max' => 255],
         ];
@@ -32,10 +32,31 @@ class Team extends ActiveRecord
             ->where(['invite_status' => 'consented']);
     }
 
+    /** Invites the owner has sent that haven't been answered yet. */
     public function getPendingMemberships()
     {
         return $this->hasMany(TeamMembership::class, ['team_id' => 'id'])
-            ->where(['invite_status' => 'invited']);
+            ->where(['invite_status' => TeamMembership::INVITE_INVITED]);
+    }
+
+    /** People who asked to join and are waiting for the owner. */
+    public function getJoinRequests()
+    {
+        return $this->hasMany(TeamMembership::class, ['team_id' => 'id'])
+            ->where(['invite_status' => TeamMembership::INVITE_REQUESTED]);
+    }
+
+    /** Last member left — kept for history, read-only, no dashboard. */
+    public function isArchived(): bool
+    {
+        return $this->archived_at !== null;
+    }
+
+    public function isMember(int $userId): bool
+    {
+        return TeamMembership::find()
+            ->where(['team_id' => $this->id, 'user_id' => $userId, 'invite_status' => TeamMembership::INVITE_CONSENTED])
+            ->exists();
     }
 
     public function getRegistrations()
@@ -78,4 +99,4 @@ class Team extends ActiveRecord
     {
         return $this->getRegistrations()->where(['competition_id' => $competitionId])->exists();
     }
-}
+}

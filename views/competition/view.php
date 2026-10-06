@@ -4,6 +4,10 @@
 /** @var app\models\Post $post */
 /** @var app\models\Competition $competition */
 /** @var bool $canManage */
+/** @var bool $canEdit */
+/** @var app\models\TeamCompetitionRegistration|null $myTeamEntry */
+/** @var bool $canWithdrawIndividual */
+/** @var bool $canWithdrawTeam */
 /** @var bool $isRegistered */
 /** @var app\models\Team|null $myRegisteredTeam */
 /** @var array $datasetSummary */
@@ -26,8 +30,10 @@ $hasDatasetAccess = $hasAnyRegistration || $canManage;
         <?php if (!Yii::$app->user->isGuest): ?>
             <?= Html::a('Contribute', ['contribute', 'id' => $post->id], ['class' => 'nav-item', 'style' => 'display:inline-flex; padding: 9px 16px;']) ?>
         <?php endif; ?>
-        <?php if ($canManage): ?>
+        <?php if ($canEdit): ?>
             <?= Html::a('Edit', ['update', 'id' => $post->id], ['class' => 'nav-item', 'style' => 'display:inline-flex; padding: 9px 16px;']) ?>
+        <?php endif; ?>
+        <?php if ($canManage): ?>
             <?= Html::a('Delete', ['delete', 'id' => $post->id], [
                 'class' => 'nav-item', 'style' => 'display:inline-flex; padding: 9px 16px; color: var(--rose);',
                 'data' => ['method' => 'post', 'confirm' => 'Delete this competition and everything tied to it? This cannot be undone.'],
@@ -84,6 +90,12 @@ $hasDatasetAccess = $hasAnyRegistration || $canManage;
     <?php if ($competition->accepts !== 'team'): ?>
         <?php if ($isRegistered): ?>
             <span class="comp-tag" style="background: linear-gradient(90deg, rgba(212,175,106,0.22), rgba(212,175,106,0.06)); border: 1px solid var(--border-strong); color: var(--gold-bright); font-weight: 700;">✓ Registered as Individual</span>
+            <?php if ($canWithdrawIndividual): ?>
+                <?= Html::a('Withdraw', ['withdraw', 'id' => $post->id], [
+                    'class' => 'nav-item', 'style' => 'display: inline-flex; padding: 9px 18px; color: var(--rose);',
+                    'data' => ['method' => 'post', 'confirm' => 'Withdraw from this competition? You can register again while registration is open.'],
+                ]) ?>
+            <?php endif; ?>
         <?php elseif (!$hasAnyRegistration && $competition->isRegistrationOpen()): ?>
             <?= Html::a('Register as Individual', ['register', 'id' => $post->id], [
                 'class' => 'nav-item active', 'style' => 'display: inline-flex; padding: 9px 20px;',
@@ -95,7 +107,24 @@ $hasDatasetAccess = $hasAnyRegistration || $canManage;
     <?php if ($competition->accepts !== 'individual'): ?>
         <?php if ($myRegisteredTeam !== null): ?>
             <span class="comp-tag" style="background: linear-gradient(90deg, rgba(212,175,106,0.22), rgba(212,175,106,0.06)); border: 1px solid var(--border-strong); color: var(--gold-bright); font-weight: 700;">✓ Registered — Team <?= Html::encode($myRegisteredTeam->name) ?></span>
-            <?= Html::a('Manage Team', ['/team/manage', 'id' => $myRegisteredTeam->id], ['class' => 'nav-item', 'style' => 'display: inline-flex; padding: 9px 20px;']) ?>
+            <?php if (!$myRegisteredTeam->isArchived()): ?>
+                <?= Html::a('Manage Line-up', ['/team/manage', 'id' => $myRegisteredTeam->id, '#' => 'competitions'], ['class' => 'nav-item', 'style' => 'display: inline-flex; padding: 9px 20px;']) ?>
+            <?php endif; ?>
+            <?php if ($canWithdrawTeam): ?>
+                <?= Html::a('Withdraw Team', ['withdraw-team', 'id' => $post->id, 'registrationId' => $myTeamEntry->id], [
+                    'class' => 'nav-item', 'style' => 'display: inline-flex; padding: 9px 18px; color: var(--rose);',
+                    'data' => ['method' => 'post', 'confirm' => "Withdraw team \"{$myRegisteredTeam->name}\" from this competition? The whole line-up comes off."],
+                ]) ?>
+            <?php endif; ?>
+            <div style="width: 100%; font-size: 12px; color: var(--text-dim);">
+                Line-up for this competition:
+                <?= Html::encode(implode(', ', array_map(fn($m) => $m->user->username ?? '?', $myTeamEntry->lineup))) ?>
+                <?php if ($competition->isRegistrationOpen()): ?>
+                    <span style="color: var(--text-faint);">· can change until registration closes</span>
+                <?php else: ?>
+                    <span style="color: var(--text-faint);">· 🔒 locked</span>
+                <?php endif; ?>
+            </div>
         <?php elseif (!$hasAnyRegistration && $competition->isRegistrationOpen()): ?>
             <?= Html::a('Register a Team', ['register-team', 'id' => $post->id], ['class' => 'nav-item active', 'style' => 'display: inline-flex; padding: 9px 20px;']) ?>
         <?php endif; ?>
@@ -140,8 +169,8 @@ $hasDatasetAccess = $hasAnyRegistration || $canManage;
             <?php $acceptsLabels = ['both' => 'Teams & Individuals', 'individual' => 'Individuals only', 'team' => 'Teams only']; ?>
             <div class="team-chip" style="justify-content: space-between;"><span>Accepts</span><strong><?= $acceptsLabels[$competition->accepts] ?? ucfirst($competition->accepts) ?></strong></div>
             <div class="team-chip" style="justify-content: space-between;"><span>Submission cap</span><strong><?= $competition->submission_cap_per_day ?>/day</strong></div>
-            <?php if ($competition->team_size_limit): ?>
-                <div class="team-chip" style="justify-content: space-between;"><span>Team size cap</span><strong><?= $competition->team_size_limit ?></strong></div>
+            <?php if ($competition->accepts !== 'individual' && $competition->teamSizeLabel()): ?>
+                <div class="team-chip" style="justify-content: space-between;"><span>Team size</span><strong><?= Html::encode($competition->teamSizeLabel()) ?></strong></div>
             <?php endif; ?>
             <?php if ($competition->reward_type !== 'none'): ?>
                 <div class="team-chip" style="justify-content: space-between; background: linear-gradient(90deg, rgba(212,175,106,0.14), rgba(212,175,106,0.03)); border: 1px solid var(--border-strong);">
@@ -267,4 +296,4 @@ function handleFileSelect(input) {
     });
 })();
 </script>
-<?php endif; ?>
+<?php endif; ?>

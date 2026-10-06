@@ -8,6 +8,8 @@ use Yii;
 use app\models\ContactForm;
 use app\models\LoginForm;
 use app\models\SignupForm;
+use app\models\PasswordResetRequestForm;
+use app\models\ResetPasswordForm;
 use yii\captcha\CaptchaAction;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
@@ -49,7 +51,7 @@ class SiteController extends Controller
                 'rules' => [
                     [
                         'allow' => true,
-                        'actions' => ['login', 'signup', 'verify-email', 'serve-image', 'error'],
+                        'actions' => ['login', 'signup', 'verify-email', 'serve-image', 'error', 'request-password-reset', 'reset-password'],
                         'roles' => ['?', '@'],
                     ],
                     [
@@ -144,6 +146,42 @@ class SiteController extends Controller
         return $this->goHome();
     }
 
+    /** "Forgot password?" — asks for the email and sends a reset link. */
+    public function actionRequestPasswordReset()
+    {
+        $this->layout = 'blank';
+
+        $model = new PasswordResetRequestForm();
+        if ($model->load(Yii::$app->request->post()) && $model->validate()) {
+            $model->sendEmail();
+            // Same message whether or not the email exists, so nobody can use
+            // this form to check which emails have accounts.
+            Yii::$app->session->setFlash('success', 'If an account exists for that email, a reset link is on its way. It expires in 5 hours.');
+            return $this->redirect(['site/login']);
+        }
+
+        return $this->render('request-password-reset', ['model' => $model]);
+    }
+
+    /** The page the emailed link opens — choose a new password. */
+    public function actionResetPassword(string $token)
+    {
+        $this->layout = 'blank';
+
+        $model = new ResetPasswordForm($token);
+        if (!$model->isTokenValid()) {
+            Yii::$app->session->setFlash('error', 'This reset link is invalid or has expired. Please request a new one.');
+            return $this->redirect(['site/request-password-reset']);
+        }
+
+        if ($model->load(Yii::$app->request->post()) && $model->resetPassword()) {
+            Yii::$app->session->setFlash('success', 'Password changed. You can now log in with your new password.');
+            return $this->redirect(['site/login']);
+        }
+
+        return $this->render('reset-password', ['model' => $model]);
+    }
+
     public function actionVerifyEmail(string $token)
     {
         $user = User::findByVerificationToken($token);
@@ -204,21 +242,22 @@ class SiteController extends Controller
         $userId = Yii::$app->user->id;
 
         // ---------- Real stat counts ----------
+        // Active (non-archived) teams I'm a member of.
         $myTeamIds = TeamMembership::find()
-            ->select('team_id')->where(['user_id' => $userId, 'invite_status' => 'consented'])->column();
+            ->alias('m')->select('m.team_id')
+            ->innerJoin(Team::tableName() . ' t', 't.id = m.team_id')
+            ->where(['m.user_id' => $userId, 'm.invite_status' => 'consented', 't.archived_at' => null])
+            ->column();
 
-        $individualCompIds = CompetitionRegistration::find()
-            ->select('competition_id')->where(['user_id' => $userId])->column();
-        $teamCompIds = empty($myTeamIds) ? [] : TeamCompetitionRegistration::find()
-            ->select('competition_id')->where(['in', 'team_id', $myTeamIds])->column();
-        $competitionsJoinedCount = count(array_unique(array_merge($individualCompIds, $teamCompIds)));
+        // Competitions I'm entered in: as an individual, or on a team's line-up.
+        $joinedCompetitionIds = \app\components\EntryService::competitionIdsFor((int) $userId);
+        $competitionsJoinedCount = count($joinedCompetitionIds);
 
         $datasetsPublishedCount = Post::find()->where(['author_id' => $userId, 'type' => 'dataset', 'status' => 'published'])->count();
         $notebooksPublishedCount = Post::find()->where(['author_id' => $userId, 'type' => 'notebook', 'status' => 'published'])->count();
         $teamsCount = count($myTeamIds);
 
         // ---------- Active competitions/hackathons I'm part of (not completed) ----------
-        $joinedCompetitionIds = array_unique(array_merge($individualCompIds, $teamCompIds));
         $activeCompetitions = [];
         if (!empty($joinedCompetitionIds)) {
             $posts = Post::find()->where(['id' => $joinedCompetitionIds, 'status' => 'published'])->all();

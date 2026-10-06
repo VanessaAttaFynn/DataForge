@@ -9,6 +9,9 @@ use app\models\Team;
 use app\models\TeamMembership;
 use app\models\TeamCompetitionRegistration;
 use app\models\CompetitionRegistration;
+use app\models\TeamCompetitionMember;
+use app\components\EntryService;
+use yii\filters\VerbFilter;
 use yii\web\Controller;
 use yii\web\UploadedFile;
 use yii\web\NotFoundHttpException;
@@ -24,7 +27,14 @@ class CompetitionController extends Controller
                 'class' => AccessControl::class,
                 'rules' => [
                     ['allow' => true, 'actions' => ['index', 'view', 'teams', 'leaderboard', 'download-dataset'], 'roles' => ['?', '@']],
-                    ['allow' => true, 'actions' => ['create', 'update', 'delete', 'mine', 'dataset', 'register', 'register-team', 'submit', 'submissions', 'my-submissions', 'contribute'], 'roles' => ['@']],
+                    ['allow' => true, 'actions' => ['create', 'update', 'delete', 'mine', 'dataset', 'register', 'register-team', 'submit', 'submissions', 'my-submissions', 'contribute', 'withdraw', 'withdraw-team'], 'roles' => ['@']],
+                ],
+            ],
+            'verbs' => [
+                'class' => VerbFilter::class,
+                'actions' => [
+                    'register' => ['post'], 'withdraw' => ['post'], 'withdraw-team' => ['post'],
+                    'delete' => ['post'], 'submit' => ['post'],
                 ],
             ],
         ];
@@ -77,36 +87,21 @@ class CompetitionController extends Controller
             ->orderBy(['created_at' => SORT_DESC])
             ->all();
 
-        $registeredIds = CompetitionRegistration::find()
-            ->select('competition_id')->where(['user_id' => $userId])->column();
-
-        $myTeamIds = TeamMembership::find()
-            ->select('team_id')->where(['user_id' => $userId, 'invite_status' => 'consented'])->column();
-
-        $teamCompetitionIds = empty($myTeamIds) ? [] : TeamCompetitionRegistration::find()
-            ->select('competition_id')->where(['in', 'team_id', $myTeamIds])->column();
-
-        $joinedIds = array_unique(array_merge($registeredIds, $teamCompetitionIds));
+        $joinedIds = EntryService::competitionIdsFor((int) $userId);
         $createdIds = array_map(fn($p) => $p->id, $created);
         $joinedIds = array_diff($joinedIds, $createdIds);
 
         $joined = empty($joinedIds) ? [] : Post::find()->where(['id' => $joinedIds])->all();
 
-        // Rank on the leaderboard for each joined competition — as an
-        // individual if registered that way, or via whichever of my teams
-        // is registered for it (there's only ever one, per-competition,
-        // thanks to the conflict check at registration time).
+        // Rank on the leaderboard for each joined competition — as an individual,
+        // or via the team line-up I'm on (a person has at most one entry per competition).
         $ranks = [];
         foreach ($joined as $post) {
             $competition = $post->competition;
-            if (in_array($post->id, $registeredIds)) {
+            if (EntryService::isIndividual($post->id, (int) $userId)) {
                 $ranks[$post->id] = \app\components\LeaderboardService::rankFor($post->id, $competition, 'individual', $userId);
-            } elseif (!empty($myTeamIds)) {
-                $myReg = \app\models\TeamCompetitionRegistration::find()
-                    ->where(['competition_id' => $post->id])->andWhere(['in', 'team_id', $myTeamIds])->one();
-                if ($myReg !== null) {
-                    $ranks[$post->id] = \app\components\LeaderboardService::rankFor($post->id, $competition, 'team', $myReg->team_id);
-                }
+            } elseif ($myReg = EntryService::teamEntryFor($post->id, (int) $userId)) {
+                $ranks[$post->id] = \app\components\LeaderboardService::rankFor($post->id, $competition, 'team', $myReg->team_id);
             }
         }
 
@@ -143,12 +138,7 @@ class CompetitionController extends Controller
         $competition = $post->competition;
         $userId = Yii::$app->user->id;
 
-        $myTeamIds = TeamMembership::find()
-            ->select('team_id')->where(['user_id' => $userId, 'invite_status' => 'consented'])->column();
-
-        $isRegistered = CompetitionRegistration::isRegistered($post->id, $userId)
-            || (!empty($myTeamIds) && TeamCompetitionRegistration::find()
-                ->where(['competition_id' => $post->id])->andWhere(['in', 'team_id', $myTeamIds])->exists());
+        $isRegistered = EntryService::hasEntry($post->id, (int) $userId);
 
         if (!$isRegistered && !Yii::$app->user->can('moderateContent') && (int) $post->author_id !== (int) $userId) {
             throw new ForbiddenHttpException('Register for this competition to access the dataset.');
@@ -164,26 +154,27 @@ class CompetitionController extends Controller
         $userId = Yii::$app->user->id;
 
         $registrations = TeamCompetitionRegistration::find()->where(['competition_id' => $id])->all();
-        $teams = array_map(fn($r) => $r->team, $registrations);
 
-        $myTeamIds = TeamMembership::find()
-            ->select('team_id')->where(['user_id' => $userId, 'invite_status' => 'consented'])->column();
-        $myPendingTeamIds = TeamMembership::find()
-            ->select('team_id')->where(['user_id' => $userId, 'invite_status' => 'invited'])->column();
+        $myTeamIds = $userId === null ? [] : TeamMembership::find()
+            ->select('team_id')->where(['user_id' => $userId, 'invite_status' => TeamMembership::INVITE_CONSENTED])->column();
+        $myPendingTeamIds = $userId === null ? [] : TeamMembership::find()
+            ->select('team_id')->where(['user_id' => $userId, 'invite_status' => [TeamMembership::INVITE_INVITED, TeamMembership::INVITE_REQUESTED]])->column();
 
         return $this->render('teams', [
             'post' => $post,
-            'teams' => $teams,
+            'competition' => $post->competition,
+            'registrations' => $registrations,
             'myTeamIds' => $myTeamIds,
             'myPendingTeamIds' => $myPendingTeamIds,
         ]);
     }
 
     /**
-     * Register one of the user's own teams for this competition.
-     * Validates: team fits the competition's team_size_limit, and no
-     * member is already committed elsewhere in this same competition
-     * (as an individual, or via another team already registered here).
+     * Register one of the user's own teams for this competition, with a chosen line-up.
+     * Only the people on the line-up count for this competition — someone who joins
+     * the team later is not added automatically.
+     * Checks: competition takes teams, line-up size within min/max, and nobody on the
+     * line-up is already entered here (as an individual or on another team).
      */
     public function actionRegisterTeam(int $id)
     {
@@ -191,80 +182,159 @@ class CompetitionController extends Controller
 
         $post = $this->findPost($id);
         $competition = $post->competition;
-        $userId = Yii::$app->user->id;
+        $userId = (int) Yii::$app->user->id;
 
+        if ($post->status !== Post::STATUS_PUBLISHED) {
+            throw new ForbiddenHttpException('This competition is not open yet.');
+        }
+        if ($competition->accepts === Competition::ACCEPTS_INDIVIDUAL) {
+            Yii::$app->session->setFlash('error', 'This competition only accepts individual entries.');
+            return $this->redirect(['view', 'id' => $id]);
+        }
         if (!$competition->isRegistrationOpen()) {
             $reason = $competition->hasEnded() ? 'This competition has ended.' : "Registration closed on {$competition->registration_deadline}.";
             Yii::$app->session->setFlash('error', $reason);
             return $this->redirect(['view', 'id' => $id]);
         }
 
-        $ownedTeamIds = Team::find()->select('id')->where(['owner_id' => $userId])->column();
+        $ownedTeams = Team::find()->where(['owner_id' => $userId, 'archived_at' => null])->all();
 
         if (Yii::$app->request->isPost) {
             $teamId = (int) Yii::$app->request->post('team_id');
             $team = Team::findOne($teamId);
 
-            if ($team === null || (int) $team->owner_id !== (int) $userId) {
+            if ($team === null || (int) $team->owner_id !== $userId || $team->isArchived()) {
                 throw new ForbiddenHttpException('You can only register a team you own.');
             }
-
-            // Cap check.
-            $memberCount = $team->getConsentedMemberCount();
-            if ($competition->team_size_limit !== null && $memberCount > $competition->team_size_limit) {
-                Yii::$app->session->setFlash('error', "Team too large — this competition caps teams at {$competition->team_size_limit} members (yours has {$memberCount}). Remove members from the team, then try again.");
-                return $this->redirect(['register-team', 'id' => $id]);
-            }
-
-            // Conflict check: is any member already an individual registrant,
-            // or already on another team registered for this same competition?
-            $memberIds = TeamMembership::find()->select('user_id')
-                ->where(['team_id' => $team->id, 'invite_status' => 'consented'])->column();
-
-            $conflictNames = [];
-            foreach ($memberIds as $memberId) {
-                $individualConflict = CompetitionRegistration::isRegistered($id, $memberId);
-
-                $otherTeamConflict = TeamCompetitionRegistration::find()
-                    ->where(['competition_id' => $id])
-                    ->andWhere(['in', 'team_id', TeamMembership::find()->select('team_id')
-                        ->where(['user_id' => $memberId, 'invite_status' => 'consented'])
-                        ->andWhere(['!=', 'team_id', $team->id])])
-                    ->exists();
-
-                if ($individualConflict || $otherTeamConflict) {
-                    $user = \app\models\User::findOne($memberId);
-                    $conflictNames[] = $user->username ?? "user #{$memberId}";
-                }
-            }
-
-            if (!empty($conflictNames)) {
-                Yii::$app->session->setFlash('error', 'Cannot register — already linked to this competition (another team or as an individual): '
-                    . implode(', ', $conflictNames) . '. They need to withdraw from their existing entry first (past submissions stay intact).');
-                return $this->redirect(['register-team', 'id' => $id]);
-            }
-
             if ($team->isRegisteredFor($id)) {
                 Yii::$app->session->setFlash('error', 'This team is already registered for this competition.');
                 return $this->redirect(['view', 'id' => $id]);
             }
 
-            $registration = new TeamCompetitionRegistration([
-                'team_id' => $team->id,
-                'competition_id' => $id,
-                'registered_at' => time(),
-            ]);
+            // Line-up: the ticked members — must all be current members of the team.
+            $memberIds = array_map('intval', TeamMembership::find()->select('user_id')
+                ->where(['team_id' => $team->id, 'invite_status' => TeamMembership::INVITE_CONSENTED])->column());
+            $postedMembers = (array) Yii::$app->request->post('members', []);
+            $picked = array_map('intval', (array) ($postedMembers[$team->id] ?? []));
+            $lineup = array_values(array_unique(array_intersect($picked, $memberIds)));
 
-            if ($registration->save()) {
-                Yii::$app->session->setFlash('success', "\"{$team->name}\" is registered for \"{$post->title}\".");
-            } else {
+            if (empty($lineup)) {
+                Yii::$app->session->setFlash('error', 'Pick at least one member for the line-up.');
+                return $this->redirect(['register-team', 'id' => $id]);
+            }
+            if ($sizeError = $competition->teamSizeError(count($lineup))) {
+                Yii::$app->session->setFlash('error', $sizeError);
+                return $this->redirect(['register-team', 'id' => $id]);
+            }
+
+            $problems = [];
+            foreach ($lineup as $memberId) {
+                $user = \app\models\User::findOne($memberId);
+                $name = $user->username ?? "user #{$memberId}";
+                if (EntryService::hasEntry($id, $memberId)) {
+                    $problems[] = "{$name} (already entered here)";
+                } elseif ($user !== null && $user->isRestrictedStudent()) {
+                    $problems[] = "{$name} (student ID not verified)";
+                }
+            }
+            if (!empty($problems)) {
+                Yii::$app->session->setFlash('error', 'Cannot register — ' . implode(', ', $problems)
+                    . '. Leave them off the line-up, or they need to withdraw from their other entry first.');
+                return $this->redirect(['register-team', 'id' => $id]);
+            }
+
+            $transaction = TeamCompetitionRegistration::getDb()->beginTransaction();
+            try {
+                $registration = new TeamCompetitionRegistration([
+                    'team_id' => $team->id,
+                    'competition_id' => $id,
+                    'registered_at' => time(),
+                ]);
+                if (!$registration->save()) {
+                    throw new \RuntimeException('Failed to save registration.');
+                }
+                foreach ($lineup as $memberId) {
+                    (new TeamCompetitionMember([
+                        'registration_id' => $registration->id,
+                        'user_id' => $memberId,
+                        'added_at' => time(),
+                    ]))->save(false);
+                }
+                $transaction->commit();
+                Yii::$app->session->setFlash('success', "\"{$team->name}\" is registered for \"{$post->title}\" with " . count($lineup) . ' member(s).');
+            } catch (\Throwable $e) {
+                $transaction->rollBack();
+                Yii::error($e->getMessage(), __METHOD__);
                 Yii::$app->session->setFlash('error', 'Could not register — please try again.');
             }
             return $this->redirect(['view', 'id' => $id]);
         }
 
-        $ownedTeams = empty($ownedTeamIds) ? [] : Team::find()->where(['id' => $ownedTeamIds])->all();
         return $this->render('register-team', ['post' => $post, 'competition' => $competition, 'ownedTeams' => $ownedTeams]);
+    }
+
+    /** Individual withdraws — only while registration is open and before any submission. */
+    public function actionWithdraw(int $id)
+    {
+        $post = $this->findPost($id);
+        $competition = $post->competition;
+        $userId = (int) Yii::$app->user->id;
+
+        $registration = CompetitionRegistration::findOne(['competition_id' => $id, 'user_id' => $userId]);
+        if ($registration === null) {
+            Yii::$app->session->setFlash('error', 'You are not registered as an individual here.');
+        } elseif ($error = $this->withdrawBlockedReason($competition, EntryService::individualHasSubmissions($id, $userId))) {
+            Yii::$app->session->setFlash('error', $error);
+        } else {
+            $registration->delete();
+            Yii::$app->session->setFlash('success', "You withdrew from \"{$post->title}\".");
+        }
+        return $this->redirect(['view', 'id' => $id]);
+    }
+
+    /** Team owner withdraws the team's entry — only while registration is open and before any submission. */
+    public function actionWithdrawTeam(int $id, int $registrationId)
+    {
+        $post = $this->findPost($id);
+        $competition = $post->competition;
+
+        $registration = TeamCompetitionRegistration::findOne(['id' => $registrationId, 'competition_id' => $id]);
+        if ($registration === null) {
+            throw new NotFoundHttpException('Entry not found.');
+        }
+        if ((int) $registration->team->owner_id !== (int) Yii::$app->user->id) {
+            throw new ForbiddenHttpException('Only the team owner can withdraw the team.');
+        }
+
+        if ($error = $this->withdrawBlockedReason($competition, $registration->hasSubmissions())) {
+            Yii::$app->session->setFlash('error', $error);
+            return $this->redirect(['view', 'id' => $id]);
+        }
+
+        $transaction = TeamCompetitionRegistration::getDb()->beginTransaction();
+        try {
+            TeamCompetitionMember::deleteAll(['registration_id' => $registration->id]);
+            $registration->delete();
+            $transaction->commit();
+            Yii::$app->session->setFlash('success', "\"{$registration->team->name}\" withdrew from \"{$post->title}\".");
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+            Yii::error($e->getMessage(), __METHOD__);
+            Yii::$app->session->setFlash('error', 'Could not withdraw — please try again.');
+        }
+        return $this->redirect(['view', 'id' => $id]);
+    }
+
+    /** Withdrawing is allowed only before registration closes and before any submission (Kaggle-style: after that the entry stays). */
+    private function withdrawBlockedReason(Competition $competition, bool $hasSubmissions): ?string
+    {
+        if (!$competition->isRegistrationOpen()) {
+            return 'Registration has closed, so entries can no longer be withdrawn.';
+        }
+        if ($hasSubmissions) {
+            return 'This entry already has submissions, so it can no longer be withdrawn.';
+        }
+        return null;
     }
 
     /** teams-registered count + individual-registration count per post, for card display. */
@@ -282,25 +352,22 @@ class CompetitionController extends Controller
     public function actionView(int $id)
     {
         $post = $this->findPost($id);
-        $canManage = (int) Yii::$app->user->id === (int) $post->author_id || Yii::$app->user->can('moderateContent');
+        $canEdit = $this->canEdit($post);
+        $canModerate = !Yii::$app->user->isGuest && Yii::$app->user->can('moderateContent');
+        $canManage = $canEdit || $canModerate; // dataset access, all-submissions view
+        $userId = Yii::$app->user->isGuest ? null : (int) Yii::$app->user->id;
 
-        $isRegistered = !Yii::$app->user->isGuest
-            && CompetitionRegistration::isRegistered($post->id, Yii::$app->user->id);
+        $isRegistered = $userId !== null && EntryService::isIndividual($post->id, $userId);
 
-        $myRegisteredTeam = null;
-        $myOwnedTeamsForPrompt = [];
-        if (!Yii::$app->user->isGuest) {
-            $myTeamIds = TeamMembership::find()
-                ->select('team_id')->where(['user_id' => Yii::$app->user->id, 'invite_status' => 'consented'])->column();
+        $myTeamEntry = $userId === null ? null : EntryService::teamEntryFor($post->id, $userId);
+        $myRegisteredTeam = $myTeamEntry?->team;
 
-            if (!empty($myTeamIds)) {
-                $reg = TeamCompetitionRegistration::find()
-                    ->where(['competition_id' => $post->id])->andWhere(['in', 'team_id', $myTeamIds])->one();
-                if ($reg !== null) {
-                    $myRegisteredTeam = $reg->team;
-                }
-            }
-        }
+        // Withdraw buttons: only shown when withdrawing is actually allowed.
+        $competitionModel = $post->competition;
+        $canWithdrawIndividual = $isRegistered && $competitionModel->isRegistrationOpen()
+            && !EntryService::individualHasSubmissions($post->id, $userId);
+        $canWithdrawTeam = $myTeamEntry !== null && (int) $myTeamEntry->team->owner_id === $userId
+            && $competitionModel->isRegistrationOpen() && !$myTeamEntry->hasSubmissions();
 
         $submissionsRemainingToday = null;
         if (!Yii::$app->user->isGuest && ($isRegistered || $myRegisteredTeam !== null)) {
@@ -316,8 +383,12 @@ class CompetitionController extends Controller
             'post' => $post,
             'competition' => $post->competition,
             'canManage' => $canManage,
+            'canEdit' => $canEdit,
             'isRegistered' => $isRegistered,
             'myRegisteredTeam' => $myRegisteredTeam,
+            'myTeamEntry' => $myTeamEntry,
+            'canWithdrawIndividual' => $canWithdrawIndividual,
+            'canWithdrawTeam' => $canWithdrawTeam,
             'datasetSummary' => $this->datasetSummary($post->competition->dataset_file_path, $post->competition),
             'leaderboardTop' => \app\components\LeaderboardService::build($post->id, $post->competition, 5),
             'submissionsRemainingToday' => $submissionsRemainingToday,
@@ -343,8 +414,17 @@ class CompetitionController extends Controller
             return $this->redirect(['view', 'id' => $id]);
         }
 
+        if ($post->status !== Post::STATUS_PUBLISHED) {
+            throw new ForbiddenHttpException('This competition is not open yet.');
+        }
+
         if (CompetitionRegistration::isRegistered($post->id, Yii::$app->user->id)) {
             Yii::$app->session->setFlash('error', 'You are already registered.');
+            return $this->redirect(['view', 'id' => $id]);
+        }
+
+        if ($teamEntry = EntryService::teamEntryFor($post->id, (int) Yii::$app->user->id)) {
+            Yii::$app->session->setFlash('error', "You're already entered on team \"{$teamEntry->team->name}\"'s line-up. Drop out of that line-up first (or have the owner withdraw it) to enter as an individual.");
             return $this->redirect(['view', 'id' => $id]);
         }
 
@@ -388,8 +468,8 @@ class CompetitionController extends Controller
     {
         $post = $this->findPost($id);
 
-        if ((int) Yii::$app->user->id !== (int) $post->author_id && !Yii::$app->user->can('moderateContent')) {
-            throw new ForbiddenHttpException('You can only edit your own competitions.');
+        if (!$this->canEdit($post)) {
+            throw new ForbiddenHttpException('Only the person who created this competition (or an admin) can edit it.');
         }
 
         $competition = $post->competition;
@@ -429,6 +509,10 @@ class CompetitionController extends Controller
         $db = Yii::$app->db;
         $transaction = $db->beginTransaction();
         try {
+            $registrationIds = TeamCompetitionRegistration::find()->select('id')->where(['competition_id' => $post->id])->column();
+            if (!empty($registrationIds)) {
+                $db->createCommand()->delete('{{%team_competition_member}}', ['registration_id' => $registrationIds])->execute();
+            }
             $db->createCommand()->delete('{{%team_competition_registration}}', ['competition_id' => $post->id])->execute();
             $db->createCommand()->delete('{{%submission}}', ['competition_id' => $post->id])->execute();
             $db->createCommand()->delete('{{%competition_registration}}', ['competition_id' => $post->id])->execute();
@@ -465,6 +549,17 @@ class CompetitionController extends Controller
             $post->author_id = Yii::$app->user->id;
         }
 
+        // Once anyone has registered, the rules that would be unfair to change are locked.
+        $lockErrors = [];
+        $locked = !$isNew && $competition->hasEntries();
+        $before = $locked ? $competition->getAttributes() : [];
+        $hadSubmissions = !$isNew && \app\models\Submission::find()->where(['competition_id' => $post->id])->exists();
+
+        foreach (['team_size_min', 'team_size_limit'] as $sizeField) {
+            if (array_key_exists($sizeField, $competitionData) && $competitionData[$sizeField] === '') {
+                $competitionData[$sizeField] = null; // blank = no limit
+            }
+        }
         $competition->attributes = $competitionData;
 
         foreach (['registration_deadline', 'deadline'] as $dateField) {
@@ -477,18 +572,50 @@ class CompetitionController extends Controller
             }
         }
 
+        if ($locked) {
+            foreach (['metric', 'accepts', 'team_size_min', 'team_size_limit', 'submission_cap_per_day'] as $field) {
+                if ((string) $competition->$field !== (string) $before[$field]) {
+                    $competition->$field = $before[$field];
+                    $lockErrors[] = "\"{$field}\" can't change once people have registered";
+                }
+            }
+            foreach (['registration_deadline' => 'Registration deadline', 'deadline' => 'Final deadline'] as $field => $label) {
+                $old = $before[$field];
+                $new = $competition->$field;
+                if (empty($old)) {
+                    // No deadline = open-ended. Adding one would shorten it, which isn't allowed.
+                    if (!empty($new)) {
+                        $competition->$field = $old;
+                        $lockErrors[] = "{$label} can't be added once people have registered";
+                    }
+                    continue;
+                }
+                if (empty($new) && $field === 'registration_deadline') {
+                    $competition->$field = $old;
+                    $lockErrors[] = 'The registration deadline can\'t be removed once people have registered';
+                } elseif (!empty($new) && intdiv(strtotime($new), 60) < intdiv(strtotime($old), 60)) { // minute precision — the form has no seconds
+                    $competition->$field = $old;
+                    $lockErrors[] = "{$label} can only be moved later, not earlier";
+                }
+            }
+        }
+
         $postValid = $post->validate();
         $competitionValid = $competition->validate([
-            'metric', 'accepts', 'team_size_limit', 'submission_cap_per_day',
+            'metric', 'accepts', 'team_size_min', 'team_size_limit', 'submission_cap_per_day',
             'reward_type', 'reward_details', 'registration_deadline', 'deadline',
             'dataset_description', 'dataset_target_column', 'dataset_license',
             'dataset_rows', 'dataset_columns', 'dataset_sheets',
         ]);
-        $isValid = $postValid && $competitionValid;
+        if ($hadSubmissions && UploadedFile::getInstanceByName('answer_key') !== null) {
+            $lockErrors[] = 'The answer key can\'t be replaced after submissions have been scored';
+        }
+
+        $isValid = $postValid && $competitionValid && empty($lockErrors);
         $success = false;
 
         if (!$isValid) {
-            $errors = array_merge($post->getFirstErrors(), $competition->getFirstErrors());
+            $errors = array_merge($post->getFirstErrors(), $competition->getFirstErrors(), $lockErrors);
             Yii::$app->session->setFlash('error', 'Please fix the following: ' . implode(' · ', $errors));
         }
 
@@ -633,21 +760,10 @@ class CompetitionController extends Controller
             return $this->redirect(['view', 'id' => $id]);
         }
 
-        // Determine participant identity: individual registration or a registered team.
-        // Once registration_deadline has passed, team eligibility uses the FROZEN
-        // roster (who was consented as of that moment) — someone added to the
-        // team afterward doesn't gain submit rights for this competition.
-        $freezeTimestamp = $competition->registrationDeadlinePassed() ? strtotime($competition->registration_deadline) : null;
-
-        $isIndividual = \app\models\CompetitionRegistration::isRegistered($id, $userId);
-        $myTeamIdsQuery = \app\models\TeamMembership::find()
-            ->select('team_id')->where(['user_id' => $userId, 'invite_status' => 'consented']);
-        if ($freezeTimestamp !== null) {
-            $myTeamIdsQuery->andWhere(['<=', 'responded_at', $freezeTimestamp]);
-        }
-        $myTeamIds = $myTeamIdsQuery->column();
-        $myTeamReg = empty($myTeamIds) ? null : \app\models\TeamCompetitionRegistration::find()
-            ->where(['competition_id' => $id])->andWhere(['in', 'team_id', $myTeamIds])->one();
+        // Who is submitting: an individual entrant, or someone on a team's line-up
+        // for this competition. Only line-up members can submit for a team.
+        $isIndividual = EntryService::isIndividual($id, (int) $userId);
+        $myTeamReg = EntryService::teamEntryFor($id, (int) $userId);
 
         if (!$isIndividual && $myTeamReg === null) {
             Yii::$app->session->setFlash('error', 'Register for this competition before submitting.');
@@ -723,10 +839,8 @@ class CompetitionController extends Controller
         $post = $this->findPost($id);
         $userId = Yii::$app->user->id;
 
-        $myTeamIds = \app\models\TeamMembership::find()
-            ->select('team_id')->where(['user_id' => $userId, 'invite_status' => 'consented'])->column();
-        $myRegisteredTeamIds = empty($myTeamIds) ? [] : \app\models\TeamCompetitionRegistration::find()
-            ->select('team_id')->where(['competition_id' => $id])->andWhere(['in', 'team_id', $myTeamIds])->column();
+        $myTeamReg = EntryService::teamEntryFor($id, (int) $userId);
+        $myRegisteredTeamIds = $myTeamReg !== null ? [$myTeamReg->team_id] : [];
 
         $submissions = \app\models\Submission::find()
             ->where(['competition_id' => $id])
@@ -774,6 +888,15 @@ class CompetitionController extends Controller
         return $this->render('contribute', ['post' => $post]);
     }
 
+    /** Editing a competition: only the person who created it, or an admin. Moderators approve/reject, they don't edit. */
+    private function canEdit(Post $post): bool
+    {
+        if (Yii::$app->user->isGuest) {
+            return false;
+        }
+        return (int) Yii::$app->user->id === (int) $post->author_id || Yii::$app->user->can('manageUsers');
+    }
+
     private function findPost(int $id): Post
     {
         $post = Post::find()->where(['id' => $id, 'type' => Post::TYPES_REQUIRING_APPROVAL])->one();
@@ -801,4 +924,4 @@ class CompetitionController extends Controller
         $text = preg_replace('~[^-\w]+~', '', $text);
         return $text ?: 'untitled';
     }
-}
+}

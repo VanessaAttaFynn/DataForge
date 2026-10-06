@@ -10,6 +10,11 @@ use yii\widgets\ActiveForm;
 
 $isUpdate = $isUpdate ?? false;
 
+// Once people have registered, these rules are locked (and deadlines can only move later).
+$locked = $isUpdate && $competition->hasEntries();
+$lockAttr = $locked ? 'disabled' : '';
+$lockNote = '<div style="font-size: 11px; color: var(--text-faint); margin-top: 4px;">🔒 Locked — people have already registered.</div>';
+
 // Shared field-wrapper style, used everywhere below.
 $labelStyle = "font-size: 12.5px; font-weight: 600; color: var(--text-dim); display: block; margin-bottom: 6px;";
 $inputStyle = "width: 100%; background: var(--panel-glass-strong); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; color: var(--text); font-family: 'Inter', sans-serif;";
@@ -124,33 +129,50 @@ $inputStyle = "width: 100%; background: var(--panel-glass-strong); border: 1px s
     <div class="wizard-step" data-step="3" style="display: none;">
         <hr style="border: none; border-top: 1px solid var(--border); margin: 0 0 22px;">
 
+        <?php if ($locked): ?>
+            <div style="font-size: 12.5px; color: var(--text-dim); background: var(--panel-glass-strong); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; margin-bottom: 18px;">
+                People have already registered, so the scoring metric, who can enter, team sizes and the daily submission cap are locked.
+                Deadlines can only be moved later.
+            </div>
+        <?php endif; ?>
+
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px;">
             <div>
                 <label style="<?= $labelStyle ?>">Scoring metric</label>
-                <select name="Competition[metric]" style="<?= $inputStyle ?>">
+                <select name="Competition[metric]" style="<?= $inputStyle ?>" <?= $lockAttr ?>>
                     <option value="accuracy" <?= $competition->metric === 'accuracy' ? 'selected' : '' ?>>Accuracy (higher is better)</option>
                     <option value="rmse" <?= $competition->metric === 'rmse' ? 'selected' : '' ?>>RMSE (lower is better)</option>
                 </select>
+                <?= $locked ? $lockNote : '' ?>
             </div>
             <div>
                 <label style="<?= $labelStyle ?>">Who can enter</label>
-                <select name="Competition[accepts]" style="<?= $inputStyle ?>">
+                <select name="Competition[accepts]" style="<?= $inputStyle ?>" <?= $lockAttr ?>>
                     <option value="both" <?= $competition->accepts === 'both' ? 'selected' : '' ?>>Individuals & Teams</option>
                     <option value="individual" <?= $competition->accepts === 'individual' ? 'selected' : '' ?>>Individuals only</option>
                     <option value="team" <?= $competition->accepts === 'team' ? 'selected' : '' ?>>Teams only</option>
                 </select>
+                <?= $locked ? $lockNote : '' ?>
             </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 6px;">
             <div>
-                <label style="<?= $labelStyle ?>">Team size limit</label>
-                <input type="number" name="Competition[team_size_limit]" min="1" value="<?= Html::encode($competition->team_size_limit) ?>" placeholder="No limit if left blank" style="<?= $inputStyle ?>">
+                <label style="<?= $labelStyle ?>">Min team size</label>
+                <input type="number" name="Competition[team_size_min]" min="1" value="<?= Html::encode($competition->team_size_min) ?>" placeholder="No minimum" style="<?= $inputStyle ?>" <?= $lockAttr ?>>
             </div>
             <div>
-                <label style="<?= $labelStyle ?>">Submission cap / day <span style="color: var(--gold); font-weight: 500;">(recommended: 5–10)</span></label>
-                <input type="number" name="Competition[submission_cap_per_day]" min="1" value="<?= Html::encode($competition->submission_cap_per_day ?: 5) ?>" required style="<?= $inputStyle ?>">
+                <label style="<?= $labelStyle ?>">Max team size</label>
+                <input type="number" name="Competition[team_size_limit]" min="1" value="<?= Html::encode($competition->team_size_limit) ?>" placeholder="No maximum" style="<?= $inputStyle ?>" <?= $lockAttr ?>>
             </div>
+            <div>
+                <label style="<?= $labelStyle ?>">Submission cap / day <span style="color: var(--gold); font-weight: 500;">(5–10)</span></label>
+                <input type="number" name="Competition[submission_cap_per_day]" min="1" value="<?= Html::encode($competition->submission_cap_per_day ?: 5) ?>" required style="<?= $inputStyle ?>" <?= $lockAttr ?>>
+            </div>
+        </div>
+        <div style="font-size: 11px; color: var(--text-faint); margin-bottom: 18px;">
+            Team sizes apply to team entries only. Each team registers with a line-up of its members — only those people count for this competition.
+            <?= $locked ? '<br>🔒 Locked — people have already registered.' : '' ?>
         </div>
 
         <hr style="border: none; border-top: 1px solid var(--border); margin: 22px 0;">
@@ -173,11 +195,15 @@ $inputStyle = "width: 100%; background: var(--panel-glass-strong); border: 1px s
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 10px;">
             <div>
                 <label style="<?= $labelStyle ?>">Registration deadline (optional)</label>
-                <input type="datetime-local" name="Competition[registration_deadline]" value="<?= Html::encode($competition->registration_deadline) ?>" style="<?= $inputStyle ?>">
+                <input type="datetime-local" name="Competition[registration_deadline]" value="<?= Html::encode($competition->registration_deadline ? date('Y-m-d\\TH:i', strtotime($competition->registration_deadline)) : '') ?>" style="<?= $inputStyle ?>"
+                       <?= $locked && $competition->registration_deadline ? 'min="' . date('Y-m-d\\TH:i', strtotime($competition->registration_deadline)) . '" required' : '' ?>
+                       <?= $locked && !$competition->registration_deadline ? 'disabled' : '' ?>>
             </div>
             <div>
                 <label style="<?= $labelStyle ?>">Final deadline (optional — blank means no deadline)</label>
-                <input type="datetime-local" name="Competition[deadline]" value="<?= Html::encode($competition->deadline) ?>" style="<?= $inputStyle ?>">
+                <input type="datetime-local" name="Competition[deadline]" value="<?= Html::encode($competition->deadline ? date('Y-m-d\\TH:i', strtotime($competition->deadline)) : '') ?>" style="<?= $inputStyle ?>"
+                       <?= $locked && $competition->deadline ? 'min="' . date('Y-m-d\\TH:i', strtotime($competition->deadline)) . '"' : '' ?>
+                       <?= $locked && !$competition->deadline ? 'disabled' : '' ?>>
             </div>
         </div>
         <div style="font-size: 11px; color: var(--text-faint); margin-bottom: 24px;">
@@ -239,4 +265,4 @@ $inputStyle = "width: 100%; background: var(--panel-glass-strong); border: 1px s
         document.getElementById('wizard-submit').style.display = current === total ? 'inline-flex' : 'none';
     };
 })();
-</script>
+</script>

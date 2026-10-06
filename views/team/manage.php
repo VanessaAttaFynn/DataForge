@@ -18,7 +18,20 @@ $memberCount = $team->getConsentedMemberCount();
         <div class="eyebrow">Team Dashboard</div>
         <h1 class="page-title"><?= Html::encode($team->name) ?></h1>
     </div>
-    <?= Html::a('Explore Competitions', ['/competition/index'], ['class' => 'nav-item active', 'style' => 'display: inline-flex; padding: 9px 20px;']) ?>
+    <div style="display: flex; gap: 10px;">
+        <?= Html::a('Explore Competitions', ['/competition/index'], ['class' => 'nav-item active', 'style' => 'display: inline-flex; padding: 9px 20px;']) ?>
+        <?php $soleMember = $memberCount === 1; ?>
+        <?php if (!$isOwner || $soleMember): ?>
+            <?= Html::a('Leave Team', ['leave', 'id' => $team->id], [
+                'class' => 'nav-item', 'style' => 'display: inline-flex; padding: 9px 18px; color: var(--rose);',
+                'data' => ['method' => 'post', 'confirm' => $soleMember
+                    ? "You're the only member. Leaving will archive \"{$team->name}\" (it moves to Past teams and can't be changed). Continue?"
+                    : "Leave \"{$team->name}\"? You'll also come off any line-up whose registration is still open."],
+            ]) ?>
+        <?php else: ?>
+            <span class="nav-item" title="Hand ownership to another member first (Members tab → Make owner)" style="display: inline-flex; padding: 9px 18px; color: var(--text-faint); cursor: not-allowed;">Leave Team</span>
+        <?php endif; ?>
+    </div>
 </div>
 
 <?php if (Yii::$app->session->hasFlash('success')): ?>
@@ -113,38 +126,54 @@ $memberCount = $team->getConsentedMemberCount();
 <?php endif; ?>
 
 <!-- Tabs -->
+<?php
+$requests = $isOwner ? $team->joinRequests : [];
+$invites = $isOwner ? $team->pendingMemberships : [];
+$members = $team->memberships;
+$myId = (int) Yii::$app->user->id;
+?>
 <div class="panel">
-    <div style="display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 14px;">
+    <div style="display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 14px; flex-wrap: wrap;">
         <button type="button" class="nav-item active tab-btn" data-tab="members" style="display: inline-flex; padding: 8px 18px; cursor: pointer; border: none;" onclick="switchTab('members')">Members (<?= $memberCount ?>)</button>
         <?php if ($isOwner): ?>
-        <button type="button" class="nav-item tab-btn" data-tab="pending" style="display: inline-flex; padding: 8px 18px; cursor: pointer; border: none;" onclick="switchTab('pending')">Pending Invites (<?= count($team->pendingMemberships) ?>)</button>
-        <button type="button" class="nav-item tab-btn" data-tab="history" style="display: inline-flex; padding: 8px 18px; cursor: pointer; border: none;" onclick="switchTab('history')">History</button>
+        <button type="button" class="nav-item tab-btn" data-tab="requests" style="display: inline-flex; padding: 8px 18px; cursor: pointer; border: none;" onclick="switchTab('requests')">Join Requests (<?= count($requests) ?>)</button>
+        <button type="button" class="nav-item tab-btn" data-tab="invites" style="display: inline-flex; padding: 8px 18px; cursor: pointer; border: none;" onclick="switchTab('invites')">Invites Sent (<?= count($invites) ?>)</button>
         <?php endif; ?>
+        <button type="button" class="nav-item tab-btn" data-tab="competitions" style="display: inline-flex; padding: 8px 18px; cursor: pointer; border: none;" onclick="switchTab('competitions')">Competitions (<?= count($registrations) ?>)</button>
     </div>
 
+    <!-- Members -->
     <div id="tab-members" class="tab-panel">
-        <?php foreach ($team->memberships as $m): ?>
+        <?php foreach ($members as $m): ?>
+            <?php $isThisOwner = (int) $m->user_id === (int) $team->owner_id; ?>
             <div class="team-chip" style="justify-content: space-between;">
-                <div>
-                    <div class="team-name"><?= Html::encode($m->user->username ?? 'Unknown') ?><?= (int) $m->user_id === (int) $team->owner_id ? ' (owner)' : '' ?></div>
-                </div>
-                <?php if ($isOwner && (int) $m->user_id !== (int) $team->owner_id): ?>
-                    <?= Html::a('Remove', ['remove-member', 'membershipId' => $m->id], [
-                        'class' => 'nav-item', 'style' => 'display: inline-flex; padding: 6px 14px; color: var(--rose); font-size: 12px;',
-                        'data' => ['method' => 'post', 'confirm' => 'Remove this member?'],
-                    ]) ?>
+                <div class="team-name"><?= Html::encode($m->user->username ?? 'Unknown') ?><?= $isThisOwner ? ' (owner)' : '' ?><?= (int) $m->user_id === $myId ? ' · you' : '' ?></div>
+                <?php if ($isOwner && !$isThisOwner): ?>
+                    <div style="display: flex; gap: 6px;">
+                        <?= Html::a('Make owner', ['transfer-ownership', 'id' => $team->id, 'userId' => $m->user_id], [
+                            'class' => 'nav-item', 'style' => 'display: inline-flex; padding: 6px 14px; font-size: 12px;',
+                            'data' => ['method' => 'post', 'confirm' => 'Make ' . ($m->user->username ?? 'this member') . ' the owner? You will stay on the team as a member.'],
+                        ]) ?>
+                        <?= Html::a('Remove', ['remove-member', 'membershipId' => $m->id], [
+                            'class' => 'nav-item', 'style' => 'display: inline-flex; padding: 6px 14px; color: var(--rose); font-size: 12px;',
+                            'data' => ['method' => 'post', 'confirm' => 'Remove this member? They also come off any line-up whose registration is still open.'],
+                        ]) ?>
+                    </div>
                 <?php endif; ?>
             </div>
         <?php endforeach; ?>
+        <?php if ($isOwner && $memberCount > 1): ?>
+            <div style="font-size: 11.5px; color: var(--text-faint); margin-top: 8px;">To leave, first make another member the owner.</div>
+        <?php endif; ?>
     </div>
 
     <?php if ($isOwner): ?>
-    <div id="tab-pending" class="tab-panel" style="display: none;">
-        <?php $pending = $team->pendingMemberships; ?>
-        <?php if (empty($pending)): ?>
-            <p style="color: var(--text-faint); font-size: 12.5px;">No pending invites or requests right now.</p>
+    <!-- Join requests: people who asked to join. Only you can approve. -->
+    <div id="tab-requests" class="tab-panel" style="display: none;">
+        <?php if (empty($requests)): ?>
+            <p style="color: var(--text-faint); font-size: 12.5px;">No one is waiting to join right now.</p>
         <?php endif; ?>
-        <?php foreach ($pending as $req): ?>
+        <?php foreach ($requests as $req): ?>
             <div class="team-chip" style="justify-content: space-between; align-items: flex-start;">
                 <div>
                     <div class="team-name"><?= Html::encode($req->user->username ?? 'Unknown') ?></div>
@@ -158,26 +187,96 @@ $memberCount = $team->getConsentedMemberCount();
         <?php endforeach; ?>
     </div>
 
-    <div id="tab-history" class="tab-panel" style="display: none;">
+    <!-- Invites you sent: waiting on the other person. -->
+    <div id="tab-invites" class="tab-panel" style="display: none;">
+        <?php if (empty($invites)): ?>
+            <p style="color: var(--text-faint); font-size: 12.5px;">No invites waiting for an answer.</p>
+        <?php endif; ?>
+        <?php foreach ($invites as $inv): ?>
+            <div class="team-chip" style="justify-content: space-between;">
+                <div>
+                    <div class="team-name"><?= Html::encode($inv->user->username ?? 'Unknown') ?></div>
+                    <div class="team-meta">Waiting for them to accept</div>
+                </div>
+                <?= Html::a('Cancel invite', ['decline-member', 'membershipId' => $inv->id], ['class' => 'nav-item', 'style' => 'display: inline-flex; padding: 6px 14px; font-size: 12px; color: var(--rose);', 'data' => ['method' => 'post']]) ?>
+            </div>
+        <?php endforeach; ?>
+    </div>
+    <?php endif; ?>
+
+    <!-- Competitions + line-ups -->
+    <div id="tab-competitions" class="tab-panel" style="display: none;">
         <?php if (empty($registrations)): ?>
             <p style="color: var(--text-faint); font-size: 12.5px;">This team hasn't registered for any competitions yet.</p>
         <?php endif; ?>
         <?php foreach ($registrations as $reg): ?>
-            <?= Html::a(
-                Html::tag('div', '<div class="team-name">' . Html::encode($reg->competitionPost->title) . '</div><div class="team-meta">' . ucfirst($reg->competitionPost->type) . '</div>', ['class' => 'team-chip']),
-                ['/competition/view', 'id' => $reg->competition_id],
-                ['style' => 'text-decoration: none; display: block;']
-            ) ?>
+            <?php
+            $compPost = $reg->competitionPost;
+            $comp = $compPost->competition;
+            $open = $comp->isRegistrationOpen();
+            $lineup = $reg->lineup;
+            $lineupIds = array_map(fn($l) => (int) $l->user_id, $lineup);
+            $addable = array_filter($members, fn($m) => !in_array((int) $m->user_id, $lineupIds, true));
+            $atMax = $comp->team_size_limit !== null && count($lineup) >= (int) $comp->team_size_limit;
+            ?>
+            <div class="team-chip" style="flex-direction: column; align-items: stretch; gap: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <?= Html::a(Html::encode($compPost->title), ['/competition/view', 'id' => $compPost->id], ['class' => 'team-name', 'style' => 'color: var(--text);']) ?>
+                        <div class="team-meta">
+                            <?= ucfirst($compPost->type) ?> · line-up <?= count($lineup) ?><?= $comp->team_size_limit ? '/' . $comp->team_size_limit : '' ?>
+                            <?= $comp->teamSizeLabel() ? ' (allowed: ' . Html::encode($comp->teamSizeLabel()) . ')' : '' ?>
+                            · <?= $open ? 'can change until registration closes' : '🔒 locked' ?>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                    <?php foreach ($lineup as $l): ?>
+                        <?php $isMe = (int) $l->user_id === $myId; ?>
+                        <span class="comp-tag" style="margin-left: 0; display: inline-flex; gap: 6px; align-items: center; background: var(--panel-glass-strong); border: 1px solid var(--border); color: var(--text);">
+                            <?= Html::encode($l->user->username ?? '?') ?>
+                            <?php if ($open && ($isOwner || $isMe)): ?>
+                                <?= Html::a($isMe && !$isOwner ? 'drop out' : '✕', ['lineup-remove', 'registrationId' => $reg->id, 'userId' => $l->user_id], [
+                                    'style' => 'color: var(--rose); text-decoration: none;',
+                                    'title' => $isMe ? 'Drop out of this line-up' : 'Take off this line-up',
+                                    'data' => ['method' => 'post', 'confirm' => $isMe ? 'Drop out of this line-up?' : 'Take ' . ($l->user->username ?? 'them') . ' off this line-up?'],
+                                ]) ?>
+                            <?php endif; ?>
+                        </span>
+                    <?php endforeach; ?>
+                </div>
+
+                <?php if ($isOwner && $open && !empty($addable)): ?>
+                    <?php if ($atMax): ?>
+                        <div style="font-size: 11.5px; color: var(--text-faint);">Line-up is at the competition's maximum.</div>
+                    <?php else: ?>
+                        <form method="post" action="<?= Url::to(['lineup-add', 'registrationId' => $reg->id, 'userId' => 0]) ?>"
+                              onsubmit="this.action = this.action.replace(/userId=\d+/, 'userId=' + this.querySelector('select').value);"
+                              style="display: flex; gap: 8px; align-items: center;">
+                            <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->csrfToken) ?>
+                            <select style="background: var(--panel-glass-strong); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; color: var(--text); font-size: 12.5px;">
+                                <?php foreach ($addable as $m): ?>
+                                    <option value="<?= $m->user_id ?>"><?= Html::encode($m->user->username ?? 'Unknown') ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <button type="submit" class="nav-item" style="display: inline-flex; padding: 6px 14px; font-size: 12px; cursor: pointer;">Add to line-up</button>
+                        </form>
+                    <?php endif; ?>
+                <?php endif; ?>
+            </div>
         <?php endforeach; ?>
     </div>
-    <?php endif; ?>
 </div>
 
 <script>
 function switchTab(name) {
+    if (!document.getElementById('tab-' + name)) return;
     document.querySelectorAll('.tab-panel').forEach(el => el.style.display = 'none');
     document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
     document.getElementById('tab-' + name).style.display = 'block';
     document.querySelector('.tab-btn[data-tab="' + name + '"]').classList.add('active');
 }
-</script>
+// Open the tab named in the URL (e.g. #competitions after changing a line-up).
+if (location.hash) { switchTab(location.hash.slice(1)); }
+</script>

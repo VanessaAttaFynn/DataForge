@@ -4,9 +4,18 @@ namespace app\models;
 
 use yii\db\ActiveRecord;
 
+/**
+ * invite_status:
+ *  - invited   : the OWNER invited this person — only the invitee can accept/decline
+ *  - requested : this person ASKED to join — only the owner can approve/decline
+ *  - consented : member
+ *  - declined  : invite/request turned down or cancelled
+ *  - left      : left the team, or was removed by the owner
+ */
 class TeamMembership extends ActiveRecord
 {
     const INVITE_INVITED = 'invited';
+    const INVITE_REQUESTED = 'requested';
     const INVITE_CONSENTED = 'consented';
     const INVITE_DECLINED = 'declined';
     const INVITE_LEFT = 'left';
@@ -35,5 +44,11 @@ class TeamMembership extends ActiveRecord
     public function getTeam()
     {
         return $this->hasOne(Team::class, ['id' => 'team_id']);
+    }
+
+    /** Still waiting on someone: an invite or a join request. */
+    public function isOpen(): bool
+    {
+        return in_array($this->invite_status, [self::INVITE_INVITED, self::INVITE_REQUESTED], true);
     }
 }

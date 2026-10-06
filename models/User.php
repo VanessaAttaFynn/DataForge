@@ -164,6 +164,35 @@ class User extends ActiveRecord implements IdentityInterface
         $this->verification_token = Yii::$app->security->generateRandomString() . '_' . time();
     }
 
+    /** Token is "<random>_<unix time>" so we can tell when it expires. */
+    public function generatePasswordResetToken(): void
+    {
+        $this->password_reset_token = Yii::$app->security->generateRandomString() . '_' . time();
+    }
+
+    public function removePasswordResetToken(): void
+    {
+        $this->password_reset_token = null;
+    }
+
+    public static function isPasswordResetTokenValid(?string $token): bool
+    {
+        if (empty($token)) {
+            return false;
+        }
+        $timestamp = (int) substr($token, strrpos($token, '_') + 1);
+        $expire = Yii::$app->params['user.passwordResetTokenExpire'] ?? 3600;
+        return $timestamp + $expire >= time();
+    }
+
+    public static function findByPasswordResetToken(string $token): ?self
+    {
+        if (!static::isPasswordResetTokenValid($token)) {
+            return null;
+        }
+        return static::findOne(['password_reset_token' => $token, 'status' => self::STATUS_ACTIVE]);
+    }
+
     // ---------- Role display helper ----------
 
     public function getRoleNames(): array

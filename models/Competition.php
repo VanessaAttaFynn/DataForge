@@ -9,6 +9,7 @@ use yii\db\ActiveRecord;
  * @property string $metric
  * @property string|null $answer_key_path
  * @property string $accepts
+ * @property int|null $team_size_min
  * @property int|null $team_size_limit
  * @property int $submission_cap_per_day
  * @property string $reward_type
@@ -45,7 +46,9 @@ class Competition extends ActiveRecord
     {
         return [
             [['post_id', 'metric', 'accepts', 'submission_cap_per_day', 'reward_type'], 'required'],
-            [['post_id', 'team_size_limit', 'submission_cap_per_day'], 'integer'],
+            [['post_id', 'team_size_min', 'team_size_limit', 'submission_cap_per_day'], 'integer'],
+            [['team_size_min', 'team_size_limit'], 'integer', 'min' => 1],
+            [['team_size_min'], 'validateTeamSizes'],
             [['reward_details'], 'string'],
             [['registration_deadline', 'deadline'], 'safe'],
             [['registration_deadline'], 'validateRegistrationBeforeDeadline'],
@@ -145,6 +148,44 @@ class Competition extends ActiveRecord
         return empty($this->deadline) ? 'None' : date('Y-m-d H:i', strtotime($this->deadline));
     }
 
+    public function validateTeamSizes(): void
+    {
+        if ($this->team_size_min !== null && $this->team_size_min !== '' && $this->team_size_limit !== null && $this->team_size_limit !== ''
+            && (int) $this->team_size_min > (int) $this->team_size_limit) {
+            $this->addError('team_size_min', 'Minimum team size cannot be bigger than the maximum.');
+        }
+    }
+
+    // ---------- Team size rules ----------
+
+    /** Error message if a line-up of $size people isn't allowed, null if it's fine. */
+    public function teamSizeError(int $size): ?string
+    {
+        if ($this->team_size_min !== null && $size < (int) $this->team_size_min) {
+            return "This competition needs at least {$this->team_size_min} people per team (this line-up has {$size}).";
+        }
+        if ($this->team_size_limit !== null && $size > (int) $this->team_size_limit) {
+            return "This competition allows at most {$this->team_size_limit} people per team (this line-up has {$size}).";
+        }
+        return null;
+    }
+
+    public function teamSizeLabel(): ?string
+    {
+        $min = $this->team_size_min;
+        $max = $this->team_size_limit;
+        if ($min === null && $max === null) return null;
+        if ($min !== null && $max !== null) return $min == $max ? "exactly {$min}" : "{$min}–{$max} people";
+        return $min !== null ? "at least {$min}" : "up to {$max}";
+    }
+
+    /** True once anyone (individual or team) has registered — key rules get locked from then on. */
+    public function hasEntries(): bool
+    {
+        return CompetitionRegistration::find()->where(['competition_id' => $this->post_id])->exists()
+            || TeamCompetitionRegistration::find()->where(['competition_id' => $this->post_id])->exists();
+    }
+
     public function validateRegistrationBeforeDeadline(): void
     {
         if (!empty($this->registration_deadline) && !empty($this->deadline)
@@ -152,4 +193,4 @@ class Competition extends ActiveRecord
             $this->addError('registration_deadline', 'Registration deadline cannot be after the submission deadline.');
         }
     }
-}
+}

@@ -1018,3 +1018,9 @@ body[data-theme="dark"] .account-dropdown-link:hover {
 }
 body[data-theme="dark"] .theme-toggle button:not(.active):hover { color: #fff; background: rgba(96,165,250,0.14); }
 body[data-theme="dark"] .toggle-password:hover { color: var(--gold) !important; }
+
+/* Buttons that use the nav-item look (tabs, small actions): no browser-default grey/white background */
+button.nav-item:not(.active) {
+  background: transparent;
+  font-family: 'Inter', sans-serif;
+}
