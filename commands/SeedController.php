@@ -14,6 +14,10 @@ use yii\db\Query;
  *                          entries + submissions, datasets, notebooks and votes
  *   php yii seed/more     (after seed/demo) adds 5 more users, 1 more team,
  *                          3 more competitions/hackathons, 5 datasets, 4 notebooks
+ *   php yii seed/activity EMAIL1 EMAIL2
+ *                          (after seed/more) gives two REAL accounts some activity:
+ *                          a team, a competition entry, submissions, a dataset,
+ *                          a notebook, votes and notifications
  *   php yii seed/passwords  sets every demo account's password to the one below
  *   php yii seed/clean    removes ONLY what seed/demo created (and anything that
  *                          points at it), leaving all real data alone
@@ -157,6 +161,152 @@ class SeedController extends Controller
         $this->stdout("  Northern Region Malaria Forecast     — ended (teams 2–3, RMSE) — won by Bayes Squad\n");
         $this->stdout("  Mobile Money Fraud Hackathon         — submissions open (teams only, 2–5)\n");
         $this->stdout("  Accra Rent Price Prediction          — registration open (teams 2–4 or solo, RMSE)\n");
+        return ExitCode::OK;
+    }
+
+    // =====================================================================
+    /**
+     * Gives two real accounts some activity, linked to the demo data:
+     * EMAIL1 creates a team (EMAIL2 joins it, plus one demo student), the team
+     * enters Accra Rent Price Prediction, both enter the Twi Sentiment Challenge
+     * with submissions, each publishes a dataset and a notebook, and both get
+     * votes and a couple of notifications.
+     *
+     * Their own team, datasets and notebooks are NOT removed by seed/clean
+     * (they belong to real accounts); their entries in demo competitions are.
+     */
+    public function actionActivity(string $email1, string $email2): int
+    {
+        $db = Yii::$app->db;
+        $this->now = time();
+
+        $real = [];
+        foreach ([$email1, $email2] as $email) {
+            $row = (new Query())->select(['id', 'username', 'created_at'])->from('{{%user}}')
+                ->where(['LOWER([[email]])' => strtolower(trim($email))])->one();
+            if (!$row) {
+                $this->stderr("No account with the email \"{$email}\".\n");
+                return ExitCode::DATAERR;
+            }
+            if (str_contains(strtolower($email), self::EMAIL_MARK)) {
+                $this->stderr("\"{$email}\" is a demo account — this is for real accounts.\n");
+                return ExitCode::DATAERR;
+            }
+            $real[] = $row;
+        }
+        if ($real[0]['id'] === $real[1]['id']) {
+            $this->stderr("Give two different accounts.\n");
+            return ExitCode::DATAERR;
+        }
+        if ((new Query())->from('{{%post}}')->where(['author_id' => array_column($real, 'id')])->andWhere(['like', 'slug', 'act-%', false])->exists()) {
+            $this->stderr("These accounts already have the seeded activity — nothing was added.\n");
+            return ExitCode::DATAERR;
+        }
+
+        foreach ((new Query())->select(['id', 'username'])->from('{{%user}}')->where(['like', 'email', self::EMAIL_MARK])->all() as $row) {
+            $this->u[$row['username']] = (int) $row['id'];
+        }
+        $comps = [];
+        foreach (['rent', 'twi'] as $key) {
+            $id = (new Query())->select('id')->from('{{%post}}')->where(['like', 'slug', "demo-{$key}-%", false])->scalar();
+            if (!$id || !isset($this->u['naa_lamptey'])) {
+                $this->stderr("Run `php yii seed/demo` and `php yii seed/more` first.\n");
+                return ExitCode::DATAERR;
+            }
+            $comps[$key] = (int) $id;
+        }
+
+        [$a, $b] = $real;
+        $this->u['_a'] = $aId = (int) $a['id'];
+        $this->u['_b'] = $bId = (int) $b['id'];
+        // activity starts after the later of the two joined (but at most 10 days back)
+        $start = max((int) $a['created_at'], (int) $b['created_at'], $this->now - 10 * 86400);
+        $at = fn(float $frac) => (int) ($start + ($this->now - $start) * $frac);
+        $teamName = 'Legon Data Lab';
+        if ((new Query())->from('{{%team}}')->where(['name' => $teamName])->exists()) {
+            $teamName = 'Legon Data Lab ' . substr((string) $aId, -3);
+        }
+
+        $transaction = $db->beginTransaction();
+        try {
+            // ---- team: A creates, B + adwoa join, kobby asks to join ----
+            $created = $at(0.1);
+            $teamId = (int) $this->insert('{{%team}}', ['name' => $teamName, 'owner_id' => $aId, 'created_at' => $created, 'cap' => 10]);
+            foreach ([[$aId, 0], [$bId, 0.15], [$this->u['adwoa_sarpong'], 0.2]] as [$uid, $f]) {
+                $this->insert('{{%team_membership}}', ['team_id' => $teamId, 'user_id' => $uid, 'invite_status' => 'consented',
+                    'invited_at' => $at($f), 'responded_at' => $at($f) + 600]);
+            }
+            $this->insert('{{%team_membership}}', ['team_id' => $teamId, 'user_id' => $this->u['kobby_ansah'], 'invite_status' => 'requested',
+                'invited_at' => $at(0.9), 'note' => 'Saw your rent entry — I can help with the modelling.']);
+
+            // ---- team enters Accra Rent (registration open) ----
+            $regAt = $at(0.3);
+            $regId = (int) $this->insert('{{%team_competition_registration}}', ['team_id' => $teamId, 'competition_id' => $comps['rent'], 'registered_at' => $regAt]);
+            foreach ([$aId, $bId, $this->u['adwoa_sarpong']] as $uid) {
+                $this->insert('{{%team_competition_member}}', ['registration_id' => $regId, 'user_id' => $uid, 'added_at' => $regAt]);
+            }
+
+            // ---- both enter Twi Sentiment solo, with submissions ----
+            foreach ([[$aId, [75.2, 78.9]], [$bId, [82.6]]] as [$uid, $scores]) {
+                $this->insert('{{%competition_registration}}', ['competition_id' => $comps['twi'], 'user_id' => $uid, 'registered_at' => $at(0.35)]);
+                foreach ($scores as $k => $score) {
+                    $file = $this->writeCsv("submissions/demo_twi_u{$uid}_{$k}.csv", ['id', 'target'], 40, "subtwi{$uid}{$k}");
+                    $this->insert('{{%submission}}', ['competition_id' => $comps['twi'], 'participant_type' => 'individual', 'user_id' => $uid,
+                        'team_id' => null, 'file_path' => $file, 'score' => $score, 'submitted_at' => $at(0.5 + $k * 0.2)]);
+                }
+            }
+
+            // ---- a dataset and a notebook each ----
+            $daysAgo = (int) ceil(($this->now - $at(0.4)) / 86400);
+            $datasets = $this->createDatasets([
+                ['hostel_prices', 'Legon Hostel Room Prices 2026', '_a', 1, [null, 'Housing'], ['hostel', 'room_type', 'beds', 'price_ghs'], 'price_ghs'],
+                ['library_visits', 'Balme Library Visits by Hour', '_b', 0, [null, 'Education'], ['day', 'hour', 'visitors'], 'visitors'],
+            ], $comps, $daysAgo, 'act-ds-', 'seed_');
+            $notebooks = $this->createNotebooks([
+                ['twi_nb', 'Twi Sentiment: Naive Bayes Starter', '_a', 0, $comps['twi']],
+                ['hostel_eda', 'Exploring Legon Hostel Prices', '_b', 1, $datasets['hostel_prices']],
+            ], $daysAgo, 'act-nb-', 'seed_');
+
+            // ---- votes both ways ----
+            $demoVoters = array_values(array_diff_key($this->u, ['_a' => 1, '_b' => 1]));
+            $this->addVotes(array_merge(array_values($datasets), $notebooks), $demoVoters, 7);
+            $demoPosts = (new Query())->select('id')->from('{{%post}}')
+                ->where(['like', 'slug', 'demo-%', false])->andWhere(['type' => ['dataset', 'notebook']])->limit(4)->column();
+            foreach ([$aId, $bId] as $uid) {
+                foreach ($demoPosts as $postId) {
+                    if (!(new Query())->from('{{%vote}}')->where(['post_id' => $postId, 'user_id' => $uid])->exists()) {
+                        $this->insert('{{%vote}}', ['post_id' => $postId, 'user_id' => $uid, 'value' => 1, 'created_at' => $at(0.6)]);
+                    }
+                }
+            }
+
+            // ---- notifications ----
+            $note = function (int $uid, string $type, string $message, string $link, float $f, int $read) use ($at) {
+                $this->insert('{{%notification}}', ['user_id' => $uid, 'type' => $type, 'message' => $message, 'link' => $link,
+                    'is_read' => $read, 'created_at' => $at($f)]);
+            };
+            $note($aId, 'dataset_verified', 'Your dataset "Legon Hostel Room Prices 2026" was verified.', "/dataset/view?id={$datasets['hostel_prices']}", 0.55, 1);
+            $note($aId, 'team_request', "kobby_ansah asked to join {$teamName}.", "/team/manage?id={$teamId}", 0.9, 0);
+            $note($bId, 'notebook_verified', 'Your notebook "Exploring Legon Hostel Prices" was verified.', "/notebook/view?id={$notebooks[1]}", 0.7, 0);
+            $note($bId, 'team_joined', "You joined {$teamName}.", "/team/manage?id={$teamId}", 0.15, 1);
+
+            $transaction->commit();
+        } catch (\Throwable $e) {
+            $transaction->rollBack();
+            foreach ($this->written as $file) {
+                @unlink($file);
+            }
+            $this->stderr('Failed, nothing was saved: ' . $e->getMessage() . "\n");
+            return ExitCode::UNSPECIFIED_ERROR;
+        }
+
+        $this->stdout("\nActivity added.\n\n", 32);
+        $this->stdout("{$a['username']}: created team \"{$teamName}\" (with {$b['username']} and adwoa_sarpong; kobby_ansah has asked to join),\n");
+        $this->stdout("  entered Accra Rent Price Prediction with the team, Twi Sentiment solo (2 submissions),\n");
+        $this->stdout("  dataset \"Legon Hostel Room Prices 2026\" (verified), notebook \"Twi Sentiment: Naive Bayes Starter\"\n");
+        $this->stdout("{$b['username']}: joined \"{$teamName}\", Twi Sentiment solo (1 submission, top of the leaderboard),\n");
+        $this->stdout("  dataset \"Balme Library Visits by Hour\", notebook \"Exploring Legon Hostel Prices\" (verified)\n");
+        $this->stdout("Both have votes and notifications.\n");
         return ExitCode::OK;
     }
 
@@ -442,22 +592,22 @@ class SeedController extends Controller
     }
 
     /** @return array key => post id */
-    private function createDatasets(array $defs, array $comps, int $startDaysAgo): array
+    private function createDatasets(array $defs, array $comps, int $startDaysAgo, string $slug = 'demo-ds-', string $file = 'demo_'): array
     {
         $datasets = [];
         foreach ($defs as $k => [$key, $title, $author, $verified, [$linkComp, $topic], $columns, $target]) {
             $created = $this->now - ($startDaysAgo - $k * 3) * 86400;
             $id = (int) $this->insert('{{%post}}', [
-                'type' => 'dataset', 'title' => $title, 'slug' => 'demo-ds-' . $key, 'author_id' => $this->u[$author],
+                'type' => 'dataset', 'title' => $title, 'slug' => $slug . $key, 'author_id' => $this->u[$author],
                 'body' => "Sample dataset for the DataForge demo: {$title}.", 'status' => 'published', 'verified' => $verified,
                 'created_at' => $created, 'updated_at' => $created,
             ]);
             $rows = 150 + $k * 40;
-            $path = $this->writeCsv("standalone-datasets/demo_{$key}.csv", $columns, $rows, $key);
+            $path = $this->writeCsv("standalone-datasets/{$file}{$key}.csv", $columns, $rows, $key);
             $this->insert('{{%dataset}}', [
                 'post_id' => $id, 'file_path' => $path, 'file_size' => filesize(Yii::getAlias('@app/web') . $path),
                 'row_count' => $rows, 'column_count' => count($columns), 'license' => 'CC BY 4.0', 'download_count' => 3 + $k * 4,
-                'topic' => $topic, 'linked_post_id' => $linkComp ? $comps[$linkComp] : null,
+                'topic' => $topic, 'linked_post_id' => $linkComp ? ($comps[$linkComp] ?? null) : null,
                 'description' => "{$title}. Synthetic sample generated for the demo.", 'target_column' => $target,
             ]);
             $datasets[$key] = $id;
@@ -466,19 +616,19 @@ class SeedController extends Controller
     }
 
     /** @return int[] post ids */
-    private function createNotebooks(array $defs, int $startDaysAgo): array
+    private function createNotebooks(array $defs, int $startDaysAgo, string $slug = 'demo-nb-', string $file = 'demo_'): array
     {
         $notebooks = [];
         foreach ($defs as $k => [$key, $title, $author, $verified, $linked]) {
             $created = $this->now - ($startDaysAgo - $k * 2) * 86400;
             $id = (int) $this->insert('{{%post}}', [
-                'type' => 'notebook', 'title' => $title, 'slug' => 'demo-nb-' . $key, 'author_id' => $this->u[$author],
+                'type' => 'notebook', 'title' => $title, 'slug' => $slug . $key, 'author_id' => $this->u[$author],
                 'body' => "Walkthrough notebook: {$title}.", 'status' => 'published', 'verified' => $verified,
                 'created_at' => $created, 'updated_at' => $created,
             ]);
             $this->insert('{{%notebook}}', [
                 'post_id' => $id, 'language' => 'python', 'linked_post_id' => $linked,
-                'notebook_file_path' => $this->writeNotebook("notebooks/demo_{$key}.ipynb", $title),
+                'notebook_file_path' => $this->writeNotebook("notebooks/{$file}{$key}.ipynb", $title),
             ]);
             $notebooks[] = $id;
         }
@@ -610,6 +760,10 @@ class SeedController extends Controller
                     in_array($col, ['origin', 'destination'], true) => ['Circle', 'Madina', 'Kaneshie', 'Achimota', 'Lapaz', 'Tema Station'][mt_rand(0, 5)],
                     $col === 'course_code' => ['DCIT 101', 'DCIT 203', 'STAT 111', 'MATH 121', 'ECON 101', 'UGRC 110'][mt_rand(0, 5)],
                     $col === 'bedrooms' => mt_rand(1, 5),
+                    $col === 'hostel' => ['Akuafo Hall', 'Legon Hall', 'Volta Hall', 'Commonwealth Hall', 'Pent Hostel', 'Bani Hostel'][mt_rand(0, 5)],
+                    $col === 'room_type' => ['Single', 'Double', 'Triple', 'Quad'][mt_rand(0, 3)],
+                    $col === 'beds' => mt_rand(1, 4),
+                    $col === 'visitors' => mt_rand(5, 600),
                     $col === 'is_fraud' => mt_rand(0, 9) === 0 ? 1 : 0,
                     $col === 'pass_rate' => round(mt_rand(550, 980) / 10, 1),
                     $col === 'building' => ['Balme Library', 'JQB', 'Akuafo Hall', 'Legon Hall', 'CS Department', 'Great Hall'][mt_rand(0, 5)],
